@@ -1,0 +1,41 @@
+{
+  "locations" : [
+    {
+      "latitude" : "40.71",
+      "longitude" : "-74.01",
+      "samples" : [
+          {
+             "date" : "2014-06-07",
+             "rainfall" : "2"
+          },
+          {
+             "date" : "2014-08-12",
+             "rainfall" : "0.5"
+          },
+          {
+             "date" : "2014-09-29",
+             "rainfall" : "1.25"
+          }
+       ]
+    },
+    {
+      "latitude" : "42.35",
+      "longitude" : "-71.06",
+      "samples" : [
+          {
+             "date" : "2014-03-03",
+             "rainfall" : "1.75"
+          },
+          {
+             "date" : "2014-05-16",
+             "rainfall" : "0.25"
+          },
+          {
+             "date" : "2014-03-18",
+             "rainfall" : "2.25"
+          }
+       ]
+    }
+  ]
+
+}

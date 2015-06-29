@@ -22,7 +22,6 @@ void pack_rain_result(v8::Isolate* isolate, v8::Local<v8::Object> & target, rain
 
 void data_rainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);
   
   location loc = unpack_location(isolate, args);
   rain_result result = calc_rain_stats(loc);
@@ -72,8 +71,7 @@ location unpack_location(Isolate * isolate, const v8::FunctionCallbackInfo<v8::V
 
 void avg_rainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);
-
+  
   location loc = unpack_location(isolate, args);
   double avg = avg_rainfall(loc);
 

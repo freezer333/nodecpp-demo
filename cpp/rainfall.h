@@ -16,6 +16,7 @@ public:
   double rainfall;
 };
 
+// added for median calculation (sorting)
 bool operator<(const sample &s1, const sample &s2);
 
 class location {

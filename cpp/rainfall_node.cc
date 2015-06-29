@@ -20,7 +20,7 @@ void pack_rain_result(v8::Isolate* isolate, v8::Local<v8::Object> & target, rain
   target->Set(String::NewFromUtf8(isolate, "n"), Integer::New(isolate, result.n));
 }
 
-void data_rainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
+void RainfallData(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
   
   location loc = unpack_location(isolate, args);
@@ -69,7 +69,7 @@ location unpack_location(Isolate * isolate, const v8::FunctionCallbackInfo<v8::V
   return loc;
 }
 
-void avg_rainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
+void AvgRainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
   
   location loc = unpack_location(isolate, args);
@@ -82,8 +82,8 @@ void avg_rainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 
 void init(Handle <Object> exports, Handle<Object> module) {
-  NODE_SET_METHOD(exports, "avg_rainfall", avg_rainfall);
-  NODE_SET_METHOD(exports, "data_rainfall", data_rainfall);
+  NODE_SET_METHOD(exports, "avg_rainfall", AvgRainfall);
+  NODE_SET_METHOD(exports, "data_rainfall", RainfallData);
 }
 
 NODE_MODULE(rainfall, init)

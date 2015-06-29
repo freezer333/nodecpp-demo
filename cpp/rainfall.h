@@ -22,4 +22,15 @@ public:
   vector<sample> samples;
 };
 
+
+class rain_result {
+   public:
+       float median;
+       float mean;
+       float standard_deviation;
+       int n;
+};
+
 double avg_rainfall(location & loc);
+
+rain_result calc_rain_stats(location &loc);

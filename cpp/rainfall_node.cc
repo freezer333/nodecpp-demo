@@ -6,6 +6,41 @@
 
 using namespace v8;
 
+
+class RainResultWrapper : public node::ObjectWrap {
+private:
+  float * _avg;
+
+  explicit RainResultWrapper();
+  ~RainResultWrapper();
+
+  static v8::Handle<v8::Value> New(const v8::Arguments& args);
+  static v8::Handle New(const v8::Arguments& args);
+  static v8::Handle<v8::Value> hello(const v8::Arguments& args);
+
+public:
+
+    static void Init(v8::Handle<v8::Object> exports);
+};
+
+v8::Persistent<v8::Function> RainResultWrapper::constructor;
+RainResultWrapper::RainResultWrapper() {
+    _avg = new float(0.5);
+}
+RainResultWrapper::~RainResultWrapper() {
+    delete _avg;
+}
+
+void RainResultWrapper::Init(v8::Handle<v8::Object> exports) {
+  v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
+  tpl->SetClassName(v8::String::NewSymbol("RainResult"));
+  tpl->InstanceTemplate()->SetInternalFieldCount(1);
+  tpl->PrototypeTemplate()->Set(v8::String::NewSymbol("hello"), v8::FunctionTemplate::New(hello)->GetFunction());
+  constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
+  exports->Set(v8::String::NewSymbol("RainResult"), constructor);
+}
+
+
 void extract_sample(sample &sample, const Handle<Object> sample_obj) {
   Handle<Value> date_Value = sample_obj->Get(String::New("date"));
   Handle<Value> rainfall_Value = sample_obj->Get(String::New("rainfall"));

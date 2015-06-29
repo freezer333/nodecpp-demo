@@ -7,3 +7,7 @@ double avg_rainfall(location & loc) {
   }
   return total / loc.samples.size();
 }
+
+rain_result calc_rain_stats(location &loc) {
+    return rain_result();
+}

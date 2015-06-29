@@ -11,9 +11,12 @@ public:
     date = d;
     rainfall = r;
   }
+
   string date;
   double rainfall;
 };
+
+bool operator<(const sample &s1, const sample &s2);
 
 class location {
 public:

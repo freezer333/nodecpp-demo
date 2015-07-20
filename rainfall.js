@@ -37,4 +37,17 @@ for (var i = 0; i < 10; i++ ) {
 }
 
 var results = rainfall.calculate_results(locations);
-console.log(JSON.stringify(results));
+var i = 0;
+results.forEach(function(result){
+    console.log("Result for Location " + i);
+    console.log("--------------------------");
+    console.log("\tLatitude:         " + locations[i].latitude.toFixed(2));
+    console.log("\tLongitude:        " + locations[i].longitude.toFixed(2));
+    console.log("\tMean Rainfall:    " + result.mean.toFixed(2) + "cm");
+    console.log("\tMedian Rainfall:  " + result.median.toFixed(2) + "cm");
+    console.log("\tStandard Dev.:    " + result.standard_deviation.toFixed(2) + "cm");
+    console.log("\tNumber Samples:   " + result.n);
+    console.log();
+    i++;
+})
+

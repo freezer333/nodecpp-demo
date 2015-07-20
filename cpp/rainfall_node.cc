@@ -8,9 +8,9 @@
 
 using namespace v8;
 
-location unpack_location(Isolate * , const v8::FunctionCallbackInfo<v8::Value>& );
+location unpack_location(Isolate * , const Handle<Object> sample_obj);
 sample unpack_sample(Isolate * , const Handle<Object> );
-
+void pack_rain_result(v8::Isolate* isolate, v8::Local<v8::Object> & target, rain_result & result);
 
 ///////////////////////////////////////////////////////////////////
 // Part 3 - Lists and Nested Objects
@@ -21,7 +21,11 @@ void CalculateResults(const v8::FunctionCallbackInfo<v8::Value>&args) {
     std::vector<rain_result> results;
     
     // extract each location (its a list)
-    
+    Local<Array> input = Local<Array>::Cast(args[0]);
+    unsigned int num_locations = input->Length();
+    for (unsigned int i = 0; i < num_locations; i++) {
+      locations.push_back(unpack_location(isolate, Local<Object>::Cast(input->Get(i))));
+    }
 
     // Build vector of rain_results
     results.resize(locations.size());
@@ -29,7 +33,12 @@ void CalculateResults(const v8::FunctionCallbackInfo<v8::Value>&args) {
 
 
     // Convert the rain_results into Objects for return
-    Local<Object> result_list = Object::New(isolate);
+    Local<Array> result_list = Array::New(isolate);
+    for (unsigned int i = 0; i < results.size(); i++ ) {
+      Local<Object> result = Object::New(isolate);
+      pack_rain_result(isolate, result, results[i]);
+      result_list->Set(i, result);
+    }
 
     // Return the list
     args.GetReturnValue().Set(result_list);
@@ -49,7 +58,7 @@ void pack_rain_result(v8::Isolate* isolate, v8::Local<v8::Object> & target, rain
 void RainfallData(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
   
-  location loc = unpack_location(isolate, args);
+  location loc = unpack_location(isolate, Handle<Object>::Cast(args[0]));
   rain_result result = calc_rain_stats(loc);
 
   Local<Object> obj = Object::New(isolate);
@@ -78,9 +87,9 @@ sample unpack_sample(Isolate * isolate, const Handle<Object> sample_obj) {
 
 
 
-location unpack_location(Isolate * isolate, const v8::FunctionCallbackInfo<v8::Value>& args) {
+location unpack_location(Isolate * isolate, const Handle<Object> location_obj) {
   location loc;
-  Handle<Object> location_obj = Handle<Object>::Cast(args[0]);
+  
   Handle<Value> lat_Value = location_obj->Get(String::NewFromUtf8(isolate,"latitude"));
   Handle<Value> lon_Value = location_obj->Get(String::NewFromUtf8(isolate,"longitude"));
   loc.latitude = lat_Value->NumberValue();
@@ -98,7 +107,7 @@ location unpack_location(Isolate * isolate, const v8::FunctionCallbackInfo<v8::V
 void AvgRainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
   Isolate* isolate = args.GetIsolate();
   
-  location loc = unpack_location(isolate, args);
+  location loc = unpack_location(isolate, Handle<Object>::Cast(args[0]));
   double avg = avg_rainfall(loc);
 
   Local<Number> retval = v8::Number::New(isolate, avg);

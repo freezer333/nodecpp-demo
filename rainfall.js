@@ -38,6 +38,6 @@ for (var i = 0; i < 10; i++ ) {
 
 var results = rainfall.calculate_results(locations);
 
-results.forEach(result) {
+results.forEach(function(result) {
     console.log(JSON.stringify(result));
-}
+});

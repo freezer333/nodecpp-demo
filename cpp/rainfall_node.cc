@@ -110,6 +110,7 @@ void AvgRainfall(const v8::FunctionCallbackInfo<v8::Value>& args) {
 void init(Handle <Object> exports, Handle<Object> module) {
   NODE_SET_METHOD(exports, "avg_rainfall", AvgRainfall);
   NODE_SET_METHOD(exports, "data_rainfall", RainfallData);
+  NODE_SET_METHOD(exports, "calculate_results", CalculateResults);
 }
 
 NODE_MODULE(rainfall, init)

@@ -3,11 +3,37 @@
 #include "rainfall.h"
 #include <string>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 using namespace v8;
 
 location unpack_location(Isolate * , const v8::FunctionCallbackInfo<v8::Value>& );
 sample unpack_sample(Isolate * , const Handle<Object> );
+
+
+///////////////////////////////////////////////////////////////////
+// Part 3 - Lists and Nested Objects
+///////////////////////////////////////////////////////////////////
+void CalculateResults(const v8::FunctionCallbackInfo<v8::Value>&args) {
+    Isolate* isolate = args.GetIsolate();
+    std::vector<location> locations;
+    std::vector<rain_result> results;
+    
+    // extract each location (its a list)
+    
+
+    // Build vector of rain_results
+    results.resize(locations.size());
+    std::transform(locations.begin(), locations.end(), results.begin(), calc_rain_stats);
+
+
+    // Convert the rain_results into Objects for return
+    Local<Object> result_list = Object::New(isolate);
+
+    // Return the list
+    args.GetReturnValue().Set(result_list);
+}
 
 
 ///////////////////////////////////////////////////////////////////

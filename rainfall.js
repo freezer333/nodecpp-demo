@@ -9,6 +9,35 @@ var location = {
           { date : "2015-07-05", rainfall : 0.9}
        ] };
 
-
+// Part 1
 console.log("Average rain fall = " + rainfall.avg_rainfall(location) + "cm");
+
+// Part 2
 console.log("Rainfall Data = " + JSON.stringify(rainfall.data_rainfall(location)));
+
+// Part 3
+
+var makeup = function(max) {
+    return Math.round(max * Math.random() * 100)/100;
+}
+
+var locations = []
+for (var i = 0; i < 10; i++ ) {
+    var loc = {
+        latitude: makeup(180), 
+        longitude: makeup(180), 
+        samples : [
+            {date: "2015-07-20", rainfall: makeup(3)}, 
+            {date: "2015-07-21", rainfall: makeup(3)}, 
+            {date: "2015-07-22", rainfall: makeup(3)}, 
+            {date: "2015-07-23", rainfall: makeup(3)}
+        ]
+    }
+    locations.push(loc);
+}
+
+var results = rainfall.calculate_results(locations);
+
+results.forEach(result) {
+    console.log(JSON.stringify(result));
+}

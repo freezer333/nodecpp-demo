@@ -31,7 +31,6 @@ rain_result calc_rain_stats(location &loc) {
   	}
   	result.standard_deviation = sqrt(ss/(result.n-1));
 
-	
   	std::sort(loc.samples.begin(), loc.samples.end());
 	if (result.n %2 == 0) {
 		result.median = (loc.samples[result.n / 2 - 1].rainfall + loc.samples[result.n / 2].rainfall) / 2;

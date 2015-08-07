@@ -49,5 +49,12 @@ results.forEach(function(result){
     console.log("\tNumber Samples:   " + result.n);
     console.log();
     i++;
-})
+});
+
+
+rainfall.calculate_results_async(locations, function(results) {
+  console.log('Got some rainfall data for you!');
+  console.log(" - " + results.length + " results actually...");
+});
+console.log("Waiting....");
 

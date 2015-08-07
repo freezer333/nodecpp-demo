@@ -1,16 +1,106 @@
 #include <node.h>
 #include <v8.h>
+#include <uv.h>
 #include "rainfall.h"
 #include <string>
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <unistd.h>
 
 using namespace v8;
 
 location unpack_location(Isolate * , const Handle<Object> sample_obj);
 sample unpack_sample(Isolate * , const Handle<Object> );
 void pack_rain_result(v8::Isolate* isolate, v8::Local<v8::Object> & target, rain_result & result);
+
+
+///////////////////////////////////////////////////////////////////
+// Part 4 - Callbacks
+///////////////////////////////////////////////////////////////////
+
+struct Work {
+  uv_work_t  request;
+  Persistent<Function>callback;
+
+  Isolate* isolate;
+  std::vector<location> locations;
+  Local<Array> result_list;
+};
+
+// called by libuv worker in separate thread
+static void WorkAsync(uv_work_t *req)
+{
+    Work *work = static_cast<Work *>(req->data);
+    sleep(3);
+}
+
+// called by libuv in event loop when async function completes
+static void WorkAsyncAfter(uv_work_t *req,int status)
+{
+    Work *work = static_cast<Work *>(req->data);
+
+    // set up return arguments
+    Handle<Value> argv[] =
+        {
+            work->result_list
+        };
+
+    // execute the callback
+    //work->callback->Call(Context::GetCurrent()->Global(),1,argv);
+    work->callback->Call(work->isolate->GetCurrentContext()->Global(), 1, argv);
+    // dispose the callback object from the work object
+    work->callback.Dispose();
+
+    // delete the work object
+    delete work;
+}
+
+void CalculateResultsAsync(const v8::FunctionCallbackInfo<v8::Value>&args) {
+    std::cerr <<"Entering function" << endl;
+    Isolate* isolate = args.GetIsolate();
+    std::vector<location> locations;
+    std::vector<rain_result> results;
+    std::cerr <<"Extracting" << endl;
+    // extract each location (its a list)
+    Local<Array> input = Local<Array>::Cast(args[0]);
+    unsigned int num_locations = input->Length();
+    for (unsigned int i = 0; i < num_locations; i++) {
+      locations.push_back(unpack_location(isolate, Local<Object>::Cast(input->Get(i))));
+    }
+
+    std::cerr <<"BUilding" << endl;
+    // Build vector of rain_results
+    results.resize(locations.size());
+    std::transform(locations.begin(), locations.end(), results.begin(), calc_rain_stats);
+
+
+    // Convert the rain_results into Objects for return
+    Local<Array> result_list = Array::New(isolate);
+    for (unsigned int i = 0; i < results.size(); i++ ) {
+      Local<Object> result = Object::New(isolate);
+      pack_rain_result(isolate, result, results[i]);
+      result_list->Set(i, result);
+    }
+    std::cerr <<"About to callback" << endl;
+    Persistent<Function> cb = Local<Function>::Cast(args[1]);
+    std::cerr <<"Casted callback" << endl;
+    const unsigned argc = 1;
+    Local<Value> argv[argc] = {result_list};
+    std::cerr <<"Created Local<Value>" << endl;
+    
+    Work * work = new Work();
+    work->request.data = work;
+    work->result_list = result_list;
+    work->callback = cb;
+    work->isolate = isolate;
+    uv_queue_work(uv_default_loop(),&work->request,WorkAsync,WorkAsyncAfter);
+    args.GetReturnValue().Set(Undefined(isolate));
+
+   // Return the list
+   // args.GetReturnValue().Set(result_list);
+
+}
 
 ///////////////////////////////////////////////////////////////////
 // Part 3 - Lists and Nested Objects
@@ -120,6 +210,8 @@ void init(Handle <Object> exports, Handle<Object> module) {
   NODE_SET_METHOD(exports, "avg_rainfall", AvgRainfall);
   NODE_SET_METHOD(exports, "data_rainfall", RainfallData);
   NODE_SET_METHOD(exports, "calculate_results", CalculateResults);
+  NODE_SET_METHOD(exports, "calculate_results_async", CalculateResultsAsync);
+  
 }
 
 NODE_MODULE(rainfall, init)

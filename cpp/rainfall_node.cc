@@ -40,6 +40,8 @@ static void WorkAsync(uv_work_t *req)
     std::transform(work->locations->begin(), work->locations->end(), work->results->begin(), calc_rain_stats);
 
     // that wasn't really that long of an operation, so lets pretend it took longer...
+    // Change this to Sleep(3000) and replace the #include <unistd.h> above with #include <windows.h> if
+    // you are using windows.
     sleep(3);
 }
 

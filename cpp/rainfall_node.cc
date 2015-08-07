@@ -21,84 +21,80 @@ void pack_rain_result(v8::Isolate* isolate, v8::Local<v8::Object> & target, rain
 
 struct Work {
   uv_work_t  request;
-  Persistent<Function>callback;
+  Persistent<Function> callback;
 
-  Isolate* isolate;
-  std::vector<location> locations;
-  Local<Array> result_list;
+  std::vector<location> * locations;
+  std::vector<rain_result> * results;
 };
 
 // called by libuv worker in separate thread
 static void WorkAsync(uv_work_t *req)
 {
     Work *work = static_cast<Work *>(req->data);
+
+    // this is the worker thread, lets build up the results
+    // allocated results from the heap because we'll need
+    // to access in the event loop later to send back
+    work->results = new std::vector<rain_result>();
+    work->results->resize(work->locations->size());
+    std::transform(work->locations->begin(), work->locations->end(), work->results->begin(), calc_rain_stats);
+
+    // that wasn't really that long of an operation, so lets pretend it took longer...
     sleep(3);
 }
 
 // called by libuv in event loop when async function completes
 static void WorkAsyncAfter(uv_work_t *req,int status)
 {
+    Isolate * isolate = Isolate::GetCurrent();
     Work *work = static_cast<Work *>(req->data);
 
+    // the work has been done, and now we pack the results
+    // vector into a Local array on the event-thread's stack.
+    Local<Array> result_list = Array::New(isolate);
+    for (unsigned int i = 0; i < work->results->size(); i++ ) {
+      Local<Object> result = Object::New(isolate);
+      pack_rain_result(isolate, result, (*(work->results))[i]);
+      result_list->Set(i, result);
+    }
+
+
     // set up return arguments
-    Handle<Value> argv[] =
-        {
-            work->result_list
-        };
-
+    Handle<Value> argv[] = { result_list };
+    
+    
     // execute the callback
-    //work->callback->Call(Context::GetCurrent()->Global(),1,argv);
-    work->callback->Call(work->isolate->GetCurrentContext()->Global(), 1, argv);
-    // dispose the callback object from the work object
-    work->callback.Dispose();
-
-    // delete the work object
+    // https://stackoverflow.com/questions/13826803/calling-javascript-function-from-a-c-callback-in-v8/28554065#28554065
+    Local<Function>::New(isolate, work->callback)->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+    
     delete work;
 }
 
 void CalculateResultsAsync(const v8::FunctionCallbackInfo<v8::Value>&args) {
-    std::cerr <<"Entering function" << endl;
     Isolate* isolate = args.GetIsolate();
-    std::vector<location> locations;
-    std::vector<rain_result> results;
-    std::cerr <<"Extracting" << endl;
-    // extract each location (its a list)
-    Local<Array> input = Local<Array>::Cast(args[0]);
-    unsigned int num_locations = input->Length();
-    for (unsigned int i = 0; i < num_locations; i++) {
-      locations.push_back(unpack_location(isolate, Local<Object>::Cast(input->Get(i))));
-    }
-
-    std::cerr <<"BUilding" << endl;
-    // Build vector of rain_results
-    results.resize(locations.size());
-    std::transform(locations.begin(), locations.end(), results.begin(), calc_rain_stats);
-
-
-    // Convert the rain_results into Objects for return
-    Local<Array> result_list = Array::New(isolate);
-    for (unsigned int i = 0; i < results.size(); i++ ) {
-      Local<Object> result = Object::New(isolate);
-      pack_rain_result(isolate, result, results[i]);
-      result_list->Set(i, result);
-    }
-    std::cerr <<"About to callback" << endl;
-    Persistent<Function> cb = Local<Function>::Cast(args[1]);
-    std::cerr <<"Casted callback" << endl;
-    const unsigned argc = 1;
-    Local<Value> argv[argc] = {result_list};
-    std::cerr <<"Created Local<Value>" << endl;
     
     Work * work = new Work();
     work->request.data = work;
-    work->result_list = result_list;
-    work->callback = cb;
-    work->isolate = isolate;
-    uv_queue_work(uv_default_loop(),&work->request,WorkAsync,WorkAsyncAfter);
-    args.GetReturnValue().Set(Undefined(isolate));
+    
+    // extract each location (its a list) and store it in the work package
+    // locations is on the heap, accessible in the libuv threads
+    work->locations = new std::vector<location>();
+    Local<Array> input = Local<Array>::Cast(args[0]);
+    unsigned int num_locations = input->Length();
+    for (unsigned int i = 0; i < num_locations; i++) {
+      work->locations->push_back(unpack_location(isolate, Local<Object>::Cast(input->Get(i))));
+    }
 
-   // Return the list
-   // args.GetReturnValue().Set(result_list);
+    // store the callback from JS in the work package so we can 
+    // invoke it later
+    Local<Function> callback = Local<Function>::Cast(args[1]);
+    work->callback.Reset(isolate, callback);
+
+    // kick of the worker thread
+    uv_queue_work(uv_default_loop(),&work->request,WorkAsync,WorkAsyncAfter);
+    
+
+    args.GetReturnValue().Set(Undefined(isolate));
 
 }
 

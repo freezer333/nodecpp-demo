@@ -49,27 +49,30 @@ static void WorkAsync(uv_work_t *req)
 static void WorkAsyncComplete(uv_work_t *req,int status)
 {
     Isolate * isolate = Isolate::GetCurrent();
+    
+    // Fix for Node 4.x - thanks to https://github.com/nwjs/blink/commit/ecda32d117aca108c44f38c8eb2cb2d0810dfdeb
+    v8::HandleScope handleScope(isolate);
+    
+    Local<Array> result_list = Array::New(isolate);
     Work *work = static_cast<Work *>(req->data);
-
+    
     // the work has been done, and now we pack the results
     // vector into a Local array on the event-thread's stack.
-    Local<Array> result_list = Array::New(isolate);
+   
     for (unsigned int i = 0; i < work->results->size(); i++ ) {
       Local<Object> result = Object::New(isolate);
       pack_rain_result(isolate, result, (*(work->results))[i]);
       result_list->Set(i, result);
     }
-
-
+    
     // set up return arguments
     Handle<Value> argv[] = { result_list };
-    
     
     // execute the callback
     // https://stackoverflow.com/questions/13826803/calling-javascript-function-from-a-c-callback-in-v8/28554065#28554065
     Local<Function>::New(isolate, work->callback)->Call(isolate->GetCurrentContext()->Global(), 1, argv);
-    
     delete work;
+    
 }
 
 void CalculateResultsAsync(const v8::FunctionCallbackInfo<v8::Value>&args) {

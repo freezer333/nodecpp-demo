@@ -70,6 +70,9 @@ static void WorkAsyncComplete(uv_work_t *req,int status)
     // execute the callback
     // https://stackoverflow.com/questions/13826803/calling-javascript-function-from-a-c-callback-in-v8/28554065#28554065
     Local<Function>::New(isolate, work->callback)->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+
+    // Free up the persistent function callback
+    work->callback.Reset();
     delete work;
 
 }

@@ -3,9 +3,9 @@ var location = {
     latitude : 40.71, longitude : -74.01,
        samples : [
           { date : "2015-06-07", rainfall : 2.1 },
-          { date : "2015-06-14", rainfall : 0.5}, 
-          { date : "2015-06-21", rainfall : 1.5}, 
-          { date : "2015-06-28", rainfall : 1.3}, 
+          { date : "2015-06-14", rainfall : 0.5},
+          { date : "2015-06-21", rainfall : 1.5},
+          { date : "2015-06-28", rainfall : 1.3},
           { date : "2015-07-05", rainfall : 0.9}
        ] };
 
@@ -41,12 +41,12 @@ var makeup = function(max) {
 var locations = []
 for (var i = 0; i < 10; i++ ) {
     var loc = {
-        latitude: makeup(180), 
-        longitude: makeup(180), 
+        latitude: makeup(180),
+        longitude: makeup(180),
         samples : [
-            {date: "2015-07-20", rainfall: makeup(3)}, 
-            {date: "2015-07-21", rainfall: makeup(3)}, 
-            {date: "2015-07-22", rainfall: makeup(3)}, 
+            {date: "2015-07-20", rainfall: makeup(3)},
+            {date: "2015-07-21", rainfall: makeup(3)},
+            {date: "2015-07-22", rainfall: makeup(3)},
             {date: "2015-07-23", rainfall: makeup(3)}
         ]
     }
@@ -61,5 +61,3 @@ print_rain_results(results);
 rainfall.calculate_results_async(locations, print_rain_results);
 
 console.log("Async results probably still not here yet...")
-
-

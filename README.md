@@ -1,8 +1,8 @@
-# Part 1
+# Introduction
 
 I love doing high-level work in node.js, but sometimes I'm working on data analysis that needs to be done in a higher performance language.  C++ is usually a good choice for these tasks, and a great thing about node is how easy it is to move data to and from C++ with the node's addon mechanism - using the V8 API.  There's a lot of documentation on the [node](http://nodejs.org/api/addons.html) site, but I've found it hard to locate full examples where there are full data structures flowing between JavaScript and C++... so I wrote this.  
 
-In this post I'll show you how to call C++ from JavaScript, passing JavaScript objects to C++ - which are turned into first-class objects matching a C++ class definition.  I'll show you how to pass different C++ objects back to node as JavaScript objects.  I'll also show you how to pass lists of objects back and forth, along with nested class/object use-cases. **Its a big topic, I've broken it into four posts, plus a follow up about packaging for npm**.
+In this article I'll show you how to call C++ from JavaScript, passing JavaScript objects to C++ - which are turned into first-class objects matching a C++ class definition.  I'll show you how to pass different C++ objects back to node as JavaScript objects.  I'll also show you how to pass lists of objects back and forth, along with nested class/object use-cases. Finally, I'll show you how to turn your addon into a fully asynchronous module using libuv so your Node application doesn't have to block when calling C++!
 
 # Integration Pattern
 I've chosen to handle objects in a way that minimizes the impact of the actual C++ code called by node.  This means that I did *not* employ the V8 class wrapping strategies, instead electing to code all transfer between V8 data types and C++ classes myself, in separate functions.  I like this method, because it keeps the V8 code isolated - and works when you don't want to directly mess with existing C++ code you are calling from node.  If you are looking to have a more automatic method of mapping V8 to C++ data structures, see this [excellent article](http://code.tutsplus.com/tutorials/writing-nodejs-addons--cms-21771), along with the [Node.js documentation](http://nodejs.org/api/addons.html#addons_wrapping_c_objects). 
@@ -10,7 +10,7 @@ I've chosen to handle objects in a way that minimizes the impact of the actual C
 # Node Version
 The code presented is based on Node.js v0.12 and above.  Node v0.12 integrated a new version of the V8 JavaScript engine, which contained a lot of API breaking changes to C++ integration.  Read more about it [here](https://strongloop.com/strongblog/node-js-v0-12-c-apis-breaking/).  **If you aren't using Node v0.12 and above, some of this code won't work for you!**
 
-# Background - Data Schema
+# Data Model (The example)
 I'm going to create a node program sends a json object containing rain fall sample data to C++ for processing.  The sample data contains a list of `locations`, marked by their latitude and longitude.  Each `location` also has a list of `samples` containing the date when the measurement was taken and the amount of rainfall in cm.  Below is an example.  
 
 *Note - you can find all the source code for this post [on github, here](https://github.com/freezer333/nodecpp-demo)*.
@@ -61,7 +61,9 @@ I'm going to create a node program sends a json object containing rain fall samp
 
 The JavaScript code will call a C++ addon to calculate average and median rainfall for each location.  *Yes, I know average/median is not exactly a "heavy compute" task - this is just for show*.  In Part 1 of this tutorial, I'll just pass one location to C++ (with several rainfall samples) and C++ will just return the average as a simple numeric value.  
 
-# Creating the C++ addon
+# Part 1 - Passing Data into C++ from Node
+
+## Creating the C++ addon
 We'll create the logic / library by defining simple C++ classes to represent locations and samples, and a function to calculate the average rainfall for a given location.  
 
 ```

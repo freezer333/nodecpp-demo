@@ -104,6 +104,41 @@ void CalculateResultsAsync(const v8::FunctionCallbackInfo<v8::Value>&args) {
 
 }
 
+void CalculateResultsSync(const v8::FunctionCallbackInfo<v8::Value>&args) {
+    Isolate* isolate = args.GetIsolate();
+    std::vector<location> locations;
+    std::vector<rain_result> results;
+    
+    // extract each location (its a list)
+    Local<Array> input = Local<Array>::Cast(args[0]);
+    unsigned int num_locations = input->Length();
+    for (unsigned int i = 0; i < num_locations; i++) {
+      locations.push_back(unpack_location(isolate, Local<Object>::Cast(input->Get(i))));
+    }
+
+    // Build vector of rain_results
+    results.resize(locations.size());
+    std::transform(locations.begin(), locations.end(), results.begin(), calc_rain_stats);
+
+
+    // Convert the rain_results into Objects for return
+    Local<Array> result_list = Array::New(isolate);
+    for (unsigned int i = 0; i < results.size(); i++ ) {
+      Local<Object> result = Object::New(isolate);
+      pack_rain_result(isolate, result, results[i]);
+      result_list->Set(i, result);
+    }
+
+
+    Local<Function> callback = Local<Function>::Cast(args[1]);
+    Handle<Value> argv[] = { result_list };
+    callback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
+        
+    std::cerr << "Returning from C++ now" << std::endl;
+    
+    args.GetReturnValue().Set(Undefined(isolate));
+}
+
 ///////////////////////////////////////////////////////////////////
 // Part 3 - Lists and Nested Objects
 ///////////////////////////////////////////////////////////////////
@@ -212,6 +247,7 @@ void init(Handle <Object> exports, Handle<Object> module) {
   NODE_SET_METHOD(exports, "avg_rainfall", AvgRainfall);
   NODE_SET_METHOD(exports, "data_rainfall", RainfallData);
   NODE_SET_METHOD(exports, "calculate_results", CalculateResults);
+  NODE_SET_METHOD(exports, "calculate_results_sync", CalculateResultsSync);
   NODE_SET_METHOD(exports, "calculate_results_async", CalculateResultsAsync);
 
 }

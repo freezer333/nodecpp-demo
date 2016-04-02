@@ -1,1 +1,0 @@
-cmd_Release/loose_type_demo.node := c++ -bundle -undefined dynamic_lookup -Wl,-search_paths_first -mmacosx-version-min=10.5 -arch x86_64 -L./Release  -o Release/loose_type_demo.node Release/obj.target/loose_type_demo/loose_type_demo.o 

@@ -4,3 +4,6 @@ cpp/rainfall.dSYM/*
 cpp/rainfall
 
 cpp/build
+
+conversions/loose/build
+conversions/strict/build

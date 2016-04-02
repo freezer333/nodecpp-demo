@@ -12,7 +12,7 @@ using namespace v8;
 Local<Value> make_return(Isolate * isolate, const Local<Object> input ) ;
 
 
-/* NOTE:  Anytime you fail to set the return value - args.getReturnValue().Set(...) - 
+/* NOTE:  Anytime you fail to set the return value - args.getReturnValue().Set(...) -
           your addon will return undefined
 */
 
@@ -39,7 +39,7 @@ void PassInteger(const FunctionCallbackInfo<Value>& args) {
     if ( args.Length() < 1 ) {
         return;
     }
-    
+
     if ( !args[0]->IsInt32()) {
         return;
     }
@@ -58,14 +58,14 @@ void PassBoolean(const FunctionCallbackInfo<Value>& args) {
     }
 
     bool value = args[0]->BooleanValue();
-    
+
     Local<Boolean> retval = Boolean::New(isolate, !value);
     args.GetReturnValue().Set(retval);
 }
 
 void PassString(const FunctionCallbackInfo<Value>& args) {
     Isolate * isolate = args.GetIsolate();
-    
+
     if ( args.Length() < 1 ) {
         return;
     }
@@ -76,15 +76,14 @@ void PassString(const FunctionCallbackInfo<Value>& args) {
         return;
     }
     else if (!args[0]->IsString()) {
-        // This clause would catch IsNull and IsUndefined too... 
+        // This clause would catch IsNull and IsUndefined too...
         return ;
     }
-    
-    
+
     v8::String::Utf8Value s(args[0]);
     std::string str(*s);
-    std::reverse(str.begin(), str.end());    
-    
+    std::reverse(str.begin(), str.end());
+
     Local<String> retval = String::NewFromUtf8(isolate, str.c_str());
     args.GetReturnValue().Set(retval);
 }
@@ -98,7 +97,7 @@ void PassObject(const FunctionCallbackInfo<Value>& args) {
     }
 
     Local<Object> target = args[0]->ToObject();
-    
+
     Local<Value> obj = make_return(isolate, target);
 
     args.GetReturnValue().Set(obj);
@@ -107,7 +106,7 @@ void PassObject(const FunctionCallbackInfo<Value>& args) {
 void PassArray(const FunctionCallbackInfo<Value>& args) {
     Isolate * isolate = args.GetIsolate();
     Local<Array> array = Local<Array>::Cast(args[0]);
-    
+
     if ( args.Length() < 1 || ! args[0]->IsArray()) {
         return;
     }
@@ -133,7 +132,7 @@ void PassArray(const FunctionCallbackInfo<Value>& args) {
         return;
       }
     }
-    
+
     Local<Array> a = Array::New(isolate);
     a->Set(0, array->Get(0));
     a->Set(1, array->Get(prop));
@@ -180,4 +179,3 @@ void init(Local<Object> exports) {
 }
 
 NODE_MODULE(strict_type_demo, init)
-

@@ -116,5 +116,48 @@ describe('loose conversions', function() {
     });
     
   });
+
+  describe('pass_object()', function () {
+    /* pass_object accepts any object and extracts numeric x/y properties.  It
+       then constructs a new object with the sum and product of x/y.  It
+       demonstrates how properties can be handled with objects in V8.
+    */
+
+    it('should fully compute properties given object with required properties', function () {
+      assert.equal(13, loose.pass_object({x:3, y:10}).sum);
+      assert.equal(30, loose.pass_object({x:3, y:10}).product);
+    });
+    it('should set sum and product to NaN given object without x or y', function () {
+      assert(13, isNaN(loose.pass_object({y:10}).sum));
+      assert(30, isNaN(loose.pass_object({x:3}).product));
+      assert(isNaN(loose.pass_object({x:3, y:"hello"}).product));
+    });
+    it('should fully compute properties given object with required properties - even when not pure numerics', function () {
+      assert.equal(4, loose.pass_object({x:3, y:true}).sum);
+      assert.equal(30, loose.pass_object({x:3, y:"10"}).product);
+      assert.equal(0, loose.pass_object({x:3, y:null}).product);
+    });
+  });
+
+
+
+  describe('pass_array()', function () {
+    /* pass_array accepts an array (input) and assumes it has 3 numeric elements at index 0-2.  
+       It also looks for an additional property called "not_index".
+       It contstructs a new array consisting of [input[0]+1, input.not_index, input[2]+1].
+       No one said these functions should be sensible ;)
+    */
+
+    it('should fully compute given expected array', function () {
+      var a = [4, 7, 9];
+      a.not_index = "hello";
+      assert.deepEqual([5, "hello", 10], loose.pass_array(a));
+    });
+    it('should return array with undefined values given incomplete input', function() {
+      assert.deepEqual([2, undefined, 4], loose.pass_array([1, 2, 3]));
+      assert.deepEqual([2, undefined, undefined], loose.pass_array([1, 2]));
+      assert.deepEqual([undefined, undefined, undefined], loose.pass_array([]));
+    });
+  });
 });
 

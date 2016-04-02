@@ -72,9 +72,9 @@ void PassArray(const FunctionCallbackInfo<Value>& args) {
 
     Local<String> prop = String::NewFromUtf8(isolate, "not_index");
     Local<Array> a = Array::New(isolate);
-    a->Set(0, Number::New(isolate, 10));
+    a->Set(0, array->Get(0));
     a->Set(1, array->Get(prop));
-    a->Set(2, Number::New(isolate, 20));
+    a->Set(2, array->Get(2));
 
     args.GetReturnValue().Set(a);
 }

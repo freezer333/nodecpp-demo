@@ -1,0 +1,19 @@
+{
+  "name": "conversions",
+  "version": "1.0.0",
+  "description": "Cheat sheet for JavaScript to C++ type conversions in V8",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/freezer333/nodecpp-demo.git"
+  },
+  "author": "Scott Frees <scott.frees@gmail.com> (http://scottfrees.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/freezer333/nodecpp-demo/issues"
+  },
+  "homepage": "https://github.com/freezer333/nodecpp-demo#readme"
+}

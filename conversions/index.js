@@ -1,6 +1,13 @@
 const loose = require('./loose/build/Release/loose_type_demo');
+const strict = require('./strict/build/Release/strict_type_demo');
 
 var assert = require('assert');
+
+
+function reverse(s) {
+  return s.split('').reverse().join('');
+}
+
 describe('loose conversions', function() {
 
   /* pass_number accepts any numeric value and adds 42 to it.
@@ -65,14 +72,13 @@ describe('loose conversions', function() {
        loose intepretation of strings in V8 mimic's exactly what 
        we'd expect in JavaScript proper.
     */
-    function reverse(s) {
-  		return s.split('').reverse().join('');
-	}
+    
   	it('should return reverse a proper string', function () {
       assert.equal(reverse("The truth is out there"), loose.pass_string("The truth is out there"));
     });
     it('should return reverse a numeric since numbers are turned into strings', function () {
       assert.equal("24", loose.pass_string(42));
+      assert.equal("eurt", loose.pass_string(true));
     });
     it('should return "llun" when given null - null is turned into "null"', function () {
       assert.equal("llun", loose.pass_string(null));
@@ -160,4 +166,124 @@ describe('loose conversions', function() {
     });
   });
 });
+
+
+//---------------------------------------
+// Strict module does exactly the same thing to input as loose example, but if there
+// are ANY deviations from true data type, undefined is returned.  Check this module's code
+// to see how error handling and strict type conversions can be handled in V8
+
+describe('strict conversions', function() {
+
+
+  describe('pass_number()', function () {
+    it('should return input + 42 when given a valid number', function () {
+      assert.equal(23+42, strict.pass_number(23));
+      assert.equal(0.5+42, strict.pass_number(0.5));
+    });
+
+    it('should return undefined any time anything by the exact expected input is given', function () {
+      assert.equal(undefined, strict.pass_number("23"));
+      assert.equal(undefined, strict.pass_number("0.5"));
+      assert.equal(undefined, strict.pass_number());
+      assert.equal(undefined, strict.pass_number(null));
+      assert.equal(undefined, strict.pass_number(undefined));
+      assert.equal(undefined, strict.pass_number("this is not a number"));
+      assert.equal(undefined, strict.pass_number({}));
+      assert.equal(undefined, strict.pass_number({x: 5}));
+      assert.equal(undefined, strict.pass_number([1, 2]));
+    });
+  });
+
+
+  describe('pass_integer()', function () {
+    it('should return input + 42 when given integer value', function () {
+      assert.equal(5+42, strict.pass_integer(5));
+    });
+    it('should return undefined any time anything by the exact expected input is given', function () {
+      assert.equal(undefined, strict.pass_integer(5.7));
+      // pass_integer deals with non numbers the same as pass_number...
+    });
+  });
+
+
+  describe('pass_string()', function () {
+    
+    it('should return reverse a proper string', function () {
+      assert.equal(reverse("The truth is out there"), strict.pass_string("The truth is out there"));
+    });
+    
+    it('should return undefined any time anything by the exact expected input is given', function () {
+      assert.equal(undefined, strict.pass_string(42));
+      assert.equal(undefined, strict.pass_string(true));
+      assert.equal(undefined, strict.pass_string(null));
+      assert.equal(undefined, strict.pass_string(undefined));
+      assert.equal(undefined, strict.pass_string({x: 5}));
+      assert.equal(undefined, strict.pass_string([9, 0]));
+    });
+  });
+
+
+  describe('pass_boolean()', function () {
+    
+    
+    it('should return compliment of proper boolean', function () {
+      assert(strict.pass_boolean(true) == false);
+      assert(strict.pass_boolean(false) == true);
+    });
+
+    it('should return undefined any time anything by the exact expected input is given', function () {
+      assert.equal(undefined, strict.pass_boolean(42));
+      assert.equal(undefined, strict.pass_boolean("is this true?"));
+      assert.equal(undefined, strict.pass_boolean("true"));
+      assert.equal(undefined, strict.pass_boolean({}));
+      assert.equal(undefined, strict.pass_boolean({x: 5}));
+      assert.equal(undefined, strict.pass_boolean([]));
+      assert.equal(undefined, strict.pass_boolean([1, 2]));
+      assert.equal(undefined, strict.pass_boolean());
+      assert.equal(undefined, strict.pass_boolean(undefined));
+      assert.equal(undefined, strict.pass_boolean(null));
+    });
+
+
+    
+  });
+
+  describe('pass_object()', function () {
+    
+
+    it('should fully compute properties given object with required properties', function () {
+      assert.equal(13, strict.pass_object({x:3, y:10}).sum);
+      assert.equal(30, strict.pass_object({x:3, y:10}).product);
+    });
+    it('should return undefined any time anything by the exact expected input is given', function () {
+      assert.equal(undefined, strict.pass_object({y:10}));
+      assert.equal(undefined, strict.pass_object({x:3}));
+      assert.equal(undefined, strict.pass_object({x:3, y:"hello"}));
+      assert.equal(undefined, strict.pass_object({x:3, y:true}));
+      assert.equal(undefined, strict.pass_object({x:3, y:"10"}));
+      assert.equal(undefined, strict.pass_object({x:3, y:null}));
+    });
+  });
+
+
+
+  describe('pass_array()', function () {
+    
+    it('should fully compute given expected array', function () {
+      var a = [4, 7, 9];
+      a.not_index = "hello";
+      assert.deepEqual([5, "hello", 10], strict.pass_array(a));
+    });
+    it('should return array with undefined values given incomplete input', function() {
+      assert.equal(undefined, strict.pass_array([1, 2, 3]));
+      assert.equal(undefined, strict.pass_array([1, 2]));
+      assert.equal(undefined, strict.pass_array([]));
+    });
+  });
+  
+});
+
+
+
 

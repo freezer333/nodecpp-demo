@@ -7,3 +7,4 @@ cpp/build
 
 conversions/loose/build
 conversions/strict/build
+streaming/to-node/build

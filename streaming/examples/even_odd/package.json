@@ -1,0 +1,10 @@
+{
+  "name": "even_odd",
+  "version": "0.0.1",
+  "private": true,
+  "gypfile": true,
+  "dependencies": {
+    "nan": "*",
+    "through": "^2.3.8"
+  }
+}

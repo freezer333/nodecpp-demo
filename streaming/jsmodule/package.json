@@ -1,0 +1,9 @@
+{
+  "name": "streaming-worker",
+  "version": "0.0.1",
+  "dependencies": {
+    "emit-stream": "^0.1.2",
+    "nan": "*",
+    "through": "^2.3.8"
+  }
+}

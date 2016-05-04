@@ -1,9 +1,0 @@
-{
-  "name": "stream_to_node",
-  "version": "0.0.1",
-  "private": true,
-  "gypfile": true,
-  "dependencies": {
-    "nan": "*"
-  }
-}

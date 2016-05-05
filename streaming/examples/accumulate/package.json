@@ -1,0 +1,16 @@
+{
+  "name": "accumulate",
+  "version": "0.0.1",
+  "private": true,
+  "gypfile": true,
+  "scripts": {
+    "start": "node accumulate.js"
+  },
+  "dependencies": {
+    "JSONStream": "^1.1.1",
+    "nan": "*",
+    "stream-array": "^1.1.2",
+    "streaming-worker": "file:../../dist",
+    "through": "^2.3.8"
+  }
+}

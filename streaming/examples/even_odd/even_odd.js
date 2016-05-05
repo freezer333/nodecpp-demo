@@ -3,7 +3,7 @@
 
 
 // this would be a lot cleaner if the modules were npm'd instead
-const worker = require("../../jsmodule/index");
+const worker = require("../../dist/index");
 const receiver = worker('../examples/even_odd/build/Release/even_odd_worker', {name:"receiver"});
 const source = worker('../examples/even_odd/build/Release/even_odd_worker', {name:"source"});
 const through = require('through');

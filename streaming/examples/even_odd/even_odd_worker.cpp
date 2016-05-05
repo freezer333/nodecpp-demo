@@ -22,27 +22,43 @@ NEXT STEP:  Support options.
 class EvenOdd : public StreamingWorker {
   public:
     EvenOdd(Callback *data
-    , Callback *complete
-    , Callback *error_callback) : StreamingWorker(data, complete, error_callback){
+      , Callback *complete
+      , Callback *error_callback, 
+      v8::Local<v8::Object> & options) : StreamingWorker(data, complete, error_callback){
 
-  }
-  ~EvenOdd(){}
-  
-  void Execute (const AsyncProgressWorker::ExecutionProgress& progress) {
-    int max ;
-    do {
-      //std::cerr << "Waiting for input:  ";
-      Message m = fromNode.read();
-     // std:: cerr << m.data << " received" << endl;
-      max = std::stoi(m.data);
-      for (int i = 0; i <= max; ++i) {
-        string event = (i % 2 == 0 ? "even_event" : "odd_event");
-        Message tosend(event, std::to_string(i));
-        writeToNode(progress, tosend);
-        std::this_thread::sleep_for(chrono::milliseconds(100));
-      }
-    } while (max >= 0);
-  }
+        start = 0;
+        if (options->IsObject() ) {
+          v8::Local<v8::Value> start_ = options->Get(New<v8::String>("start").ToLocalChecked());
+          if ( start_->IsNumber() ) {
+            start = start_->NumberValue();
+          }
+          name = "even_odd";
+          v8::Local<v8::Value> name_ = options->Get(New<v8::String>("name").ToLocalChecked());
+          if ( name_->IsString() ) {
+            v8::String::Utf8Value s(name_);
+            name = *s;
+          }
+        }
+    }
+    ~EvenOdd(){}
+    
+    void Execute (const AsyncProgressWorker::ExecutionProgress& progress) {
+      int max ;
+      do {
+        Message m = fromNode.read();
+        std:: cerr << m.data << " received by " << name << endl;
+        max = std::stoi(m.data);
+        for (int i = start; i <= max; ++i) {
+          string event = (i % 2 == 0 ? "even_event" : "odd_event");
+          Message tosend(event, std::to_string(i));
+          writeToNode(progress, tosend);
+          std::this_thread::sleep_for(chrono::milliseconds(100));
+        }
+      } while (max >= 0);
+    }
+  private:
+    int start;
+    string name;
 };
 
 // Important:  You MUST include this function, and you cannot alter
@@ -51,8 +67,8 @@ class EvenOdd : public StreamingWorker {
 //             function is defined in addon-streams.h
 StreamingWorker * create_worker(Callback *data
     , Callback *complete
-    , Callback *error_callback) {
- return new EvenOdd(data, complete, error_callback);
+    , Callback *error_callback, v8::Local<v8::Object> & options) {
+ return new EvenOdd(data, complete, error_callback, options);
 }
 
 // Don't forget this!  You can change the name of your module, 

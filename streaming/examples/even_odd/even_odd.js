@@ -7,8 +7,7 @@ const path = require("path");
 var addon_path = path.join(__dirname, "build/Release/even_odd_worker");
 
 const receiver = worker(addon_path, {name:"receiver"});
-const source = worker(addon_path, {name:"source"});
-
+const source = worker(addon_path, {name: "source", start:5});
 
 // Build stream from source emitter - streams output from source addon
 var source_stream = source.build_output_stream();

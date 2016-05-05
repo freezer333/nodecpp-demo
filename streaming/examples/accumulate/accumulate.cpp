@@ -16,37 +16,46 @@ class Accumulate : public StreamingWorker {
       v8::Local<v8::Object> & options) : StreamingWorker(data, complete, error_callback){
 
         sum = 0;
+        filter = "";
+        if (options->IsObject() ) {
+          v8::Local<v8::Value> filter_ = options->Get(New<v8::String>("filter").ToLocalChecked());
+          if ( filter_->IsString() ) {
+            v8::String::Utf8Value s(filter_);
+            filter = *s;
+          }
+        }
     }
     ~Accumulate(){}
     
+    bool filter_by_name(string name) {
+      return ( name == filter && filter.length() > 0);
+    }
+
     void Execute (const AsyncProgressWorker::ExecutionProgress& progress) {
       int value ;
       do {
         Message m = fromNode.read();
         value = std::stoi(m.data);
-        if ( value > 0  ){
-          sum += value;
-        }
-        else {
-          Message tosend("sum", std::to_string(sum));
-          writeToNode(progress, tosend);
+        if ( filter_by_name(m.name) || value <= 0) {
+          if ( value > 0 ){
+            sum += value;
+          }
+          else {
+            Message tosend("sum", std::to_string(sum));
+            writeToNode(progress, tosend);
+          }
         }
       } while (value > 0);
     }
   private:
     int sum;
+    string filter;
 };
 
-// Important:  You MUST include this function, and you cannot alter
-//             the signature at all.  The base wrapper class calls this
-//             to build your particular worker.  The prototype for this
-//             function is defined in addon-streams.h
 StreamingWorker * create_worker(Callback *data
     , Callback *complete
     , Callback *error_callback, v8::Local<v8::Object> & options) {
  return new Accumulate(data, complete, error_callback, options);
 }
 
-// Don't forget this!  You can change the name of your module, 
-// but the second parameter should always be as shown.
 NODE_MODULE(even_odd_worker, StreamWorkerWrapper::Init)

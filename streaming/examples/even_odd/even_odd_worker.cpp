@@ -8,17 +8,6 @@
 
 using namespace std;
 
-/*
-
-NEXT STEP:  Support options.
-            
-*/
-
-
-
-///////////////////////////////
-// User
-//////////////////////////////
 class EvenOdd : public StreamingWorker {
   public:
     EvenOdd(Callback *data

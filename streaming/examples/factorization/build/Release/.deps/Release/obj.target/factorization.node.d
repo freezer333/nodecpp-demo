@@ -1,0 +1,1 @@
+cmd_Release/obj.target/factorization.node := g++ -shared -pthread -rdynamic -m64  -Wl,-soname=factorization.node -o Release/obj.target/factorization.node -Wl,--start-group Release/obj.target/factorization/factorization.o -Wl,--end-group 

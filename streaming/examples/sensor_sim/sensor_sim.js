@@ -24,10 +24,10 @@ const pluck_and_parse = through(function (data) {
            		this.queue(JSON.parse(data[1]));
                });
 
-// out is a stream created from the "from" event emitter
-wobbly_sensor.out
-      .pipe(pluck_and_parse) // extract data
-      .pipe(through(function(sample) { // just print the sample object
+// the stream isn't created unless you ask for it...
+const out = wobbly_sensor.from.stream();
+out.pipe(pluck_and_parse) // extract data
+   .pipe(through(function(sample) { // just print the sample object
       		console.log(">>>>>>>>>>> Stream >>>>>>>>>>");
       		console.log(sample);
       		console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>");

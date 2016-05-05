@@ -47,7 +47,6 @@ var make_stream = function(cpp_entry_point, opts) {
                         this.end();
                     }
                     else {
-                        console.log(data);
                         sw.to.emit(data[0], data[1]);
                     }
                 }

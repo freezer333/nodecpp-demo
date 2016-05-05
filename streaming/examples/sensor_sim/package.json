@@ -1,0 +1,12 @@
+{
+  "name": "sensor_sim",
+  "version": "0.0.1",
+  "private": true,
+  "gypfile": true,
+  "dependencies": {
+    "JSONStream": "^1.1.1",
+    "nan": "*",
+    "streaming-worker": "file:../../dist",
+    "through": "^2.3.8"
+  }
+}

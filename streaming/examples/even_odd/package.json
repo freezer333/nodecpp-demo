@@ -5,6 +5,7 @@
   "gypfile": true,
   "dependencies": {
   	"nan": "*",
-    "through": "^2.3.8"
+    "through": "^2.3.8", 
+    "streaming-worker" : "file:../../dist"
   }
 }

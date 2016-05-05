@@ -1,13 +1,13 @@
 "use strict"; 
 
-
-
-// this would be a lot cleaner if the modules were npm'd instead
-const worker = require("../../dist/index");
-const receiver = worker('../examples/even_odd/build/Release/even_odd_worker', {name:"receiver"});
-const source = worker('../examples/even_odd/build/Release/even_odd_worker', {name:"source"});
+const worker = require("streaming-worker");
 const through = require('through');
+const path = require("path");
 
+var addon_path = path.join(__dirname, "build/Release/even_odd_worker");
+
+const receiver = worker(addon_path, {name:"receiver"});
+const source = worker(addon_path, {name:"source"});
 
 
 // Build stream from source emitter - streams output from source addon

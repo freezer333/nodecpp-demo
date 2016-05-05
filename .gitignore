@@ -9,4 +9,3 @@ conversions/loose/build
 conversions/strict/build
 *build*
 *node_modules*
-streaming/examples/*/build/

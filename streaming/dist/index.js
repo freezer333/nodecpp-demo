@@ -42,12 +42,18 @@ var make_stream = function(cpp_entry_point, opts) {
         },
         stream : function(end) {
             var input = through(function write(data) {
-            if ( data[0] == "close"){
-                this.end();
-            }
-            else {
-                sw.toAddon.emit(data[0], data[1]);
-            }
+                if (Array.isArray(data)) {
+                    if ( data[0] == "close"){
+                        this.end();
+                    }
+                    else {
+                        console.log(data);
+                        sw.to.emit(data[0], data[1]);
+                    }
+                }
+                else {
+                    sw.to.emit("data", data);
+                }
           },
           end);
         return input;

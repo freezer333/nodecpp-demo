@@ -121,7 +121,7 @@ private:
   }
 };
 
-StreamingWorker * create_worker(Callback *, Callback *, Callback *);
+StreamingWorker * create_worker(Callback *, Callback *, Callback *, v8::Local<v8::Object> &);
 
 class StreamWorkerWrapper : public Nan::ObjectWrap {
  public:
@@ -149,12 +149,13 @@ class StreamWorkerWrapper : public Nan::ObjectWrap {
       Callback *data_callback = new Callback(info[0].As<v8::Function>());
       Callback *complete_callback = new Callback(info[1].As<v8::Function>());
       Callback *error_callback = new Callback(info[2].As<v8::Function>());
+      v8::Local<v8::Object> options = info[3].As<v8::Object>();
 
       StreamWorkerWrapper *obj = new StreamWorkerWrapper(
                             create_worker(
                                 data_callback, 
                                 complete_callback, 
-                                error_callback));
+                                error_callback, options));
       
       obj->Wrap(info.This());
       info.GetReturnValue().Set(info.This());

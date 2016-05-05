@@ -27,10 +27,11 @@ var make_stream = function(cpp_entry_point, opts) {
             worker.sendToAddon(name, data);
         }
     }
+    sw.close = function (){
+        worker.closeInput();
+    }
 
-    sw.build_output_stream = function() {
-        return emitStream(sw.fromAddon).
-                pipe(through(function (data) {
+    sw.out = emitStream(sw.fromAddon).pipe(through(function (data) {
                     if ( data[0] == "close"){
                         this.end();
                     }
@@ -39,7 +40,8 @@ var make_stream = function(cpp_entry_point, opts) {
                     }
 
                 }));
-    }
+
+    
 
     sw.build_input_stream = function(end) {
         var input = through(function write(data) {

@@ -67,7 +67,9 @@ class StreamingWorker : public AsyncProgressWorker {
       Callback *error_callback
     )
     : AsyncProgressWorker(callback), progress(progress), error_callback(error_callback)
-    {}
+    {
+      input_closed = false;
+    }
   ~StreamingWorker() {}
 
   void HandleErrorCallback() {
@@ -88,6 +90,10 @@ class StreamingWorker : public AsyncProgressWorker {
     drainQueue();
   }
 
+  void close() {
+    input_closed = true;
+  }
+
   PCQueue<Message> fromNode;
 
  protected:
@@ -97,11 +103,15 @@ class StreamingWorker : public AsyncProgressWorker {
     progress.Send(reinterpret_cast<const char*>(&toNode), sizeof(toNode));
   }
 
+  bool closed() {
+    return input_closed;
+  }
+
 
   Callback *progress;
   Callback *error_callback;
   PCQueue<Message> toNode;
- 
+  bool input_closed;
 
 private:
   void drainQueue() {
@@ -128,9 +138,10 @@ class StreamWorkerWrapper : public Nan::ObjectWrap {
   static NAN_MODULE_INIT(Init) {
     v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
     tpl->SetClassName(Nan::New("StreamingWorker").ToLocalChecked());
-    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    tpl->InstanceTemplate()->SetInternalFieldCount(2);
 
     SetPrototypeMethod(tpl, "sendToAddon", sendToAddon);
+    SetPrototypeMethod(tpl, "closeInput", closeInput);
     
     constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
     Nan::Set(target, Nan::New("StreamingWorker").ToLocalChecked(),
@@ -178,7 +189,10 @@ class StreamWorkerWrapper : public Nan::ObjectWrap {
     obj->_worker->fromNode.write(Message(*name, *data));
   }
 
-  
+  static NAN_METHOD(closeInput) {
+    StreamWorkerWrapper* obj = Nan::ObjectWrap::Unwrap<StreamWorkerWrapper>(info.Holder());
+    obj->_worker->close();
+  }
 
   static inline Nan::Persistent<v8::Function> & constructor() {
     static Nan::Persistent<v8::Function> my_constructor;

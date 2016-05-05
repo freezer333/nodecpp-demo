@@ -9,7 +9,7 @@ const addon_path = path.join(__dirname, "build/Release/sensor_sim");
 const wobbly_sensor = worker(addon_path, {name: "Head Mounted Display"});
 
 // Option 1 - Just use the emitter interface
-wobbly_sensor.fromAddon.on('position_sample', function(sample){
+wobbly_sensor.from.on('position_sample', function(sample){
 	console.log("----------- Event -----------");
     console.log(JSON.parse(sample));
     console.log("-----------------------------");

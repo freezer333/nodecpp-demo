@@ -21,8 +21,8 @@ var make_stream = function(cpp_entry_point, opts) {
         opts);
 
     var sw = {};
-    sw.fromAddon = emitter;
-    sw.toAddon = {
+    sw.from = emitter;
+    sw.to = {
         emit : function(name, data) {
             worker.sendToAddon(name, data);
         }
@@ -31,15 +31,15 @@ var make_stream = function(cpp_entry_point, opts) {
         worker.closeInput();
     }
 
-    sw.out = emitStream(sw.fromAddon).pipe(through(function (data) {
-                    if ( data[0] == "close"){
-                        this.end();
-                    }
-                    else {
-                        this.queue(data);
-                    }
-
-                }));
+    sw.out = emitStream(sw.from).pipe(
+        through(function (data) {
+            if ( data[0] == "close"){
+                this.end();
+            }
+            else {
+                this.queue(data);
+            }
+        }));
 
     
 

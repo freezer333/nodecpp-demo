@@ -7,5 +7,6 @@ cpp/build
 
 conversions/loose/build
 conversions/strict/build
-*/build
+*/build*
 *node_modules*
+streaming/examples/even_odd/build/

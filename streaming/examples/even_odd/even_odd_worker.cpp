@@ -35,7 +35,6 @@ class EvenOdd : public StreamingWorker {
       int max ;
       do {
         Message m = fromNode.read();
-        std:: cerr << m.data << " received by " << name << endl;
         max = std::stoi(m.data);
         for (int i = start; i <= max; ++i) {
           string event = (i % 2 == 0 ? "even_event" : "odd_event");

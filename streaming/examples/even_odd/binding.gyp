@@ -4,7 +4,7 @@
       "target_name": "even_odd_worker",
       "sources": [ "even_odd_worker.cpp" ], 
       "cflags": ["-Wall", "-std=c++11"],
-      "include_dirs" : ["<!(node -e \"require('nan')\")", "../../cppmodule"],
+      "include_dirs" : ["<!(node -e \"require('nan')\")", "../../dist"],
       'xcode_settings': {
         'OTHER_CFLAGS': [
           '-std=c++11'

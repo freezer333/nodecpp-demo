@@ -21,30 +21,27 @@ var make_stream = function(cpp_entry_point, opts) {
         opts);
 
     var sw = {};
+    
+
     sw.from = emitter;
+    sw.from.stream = function() {
+        return emitStream(sw.from).pipe(
+            through(function (data) {
+                if ( data[0] == "close"){
+                    this.end();
+                }
+                else {
+                    this.queue(data);
+                }
+            }));
+    }
+
     sw.to = {
         emit : function(name, data) {
             worker.sendToAddon(name, data);
-        }
-    }
-    sw.close = function (){
-        worker.closeInput();
-    }
-
-    sw.out = emitStream(sw.from).pipe(
-        through(function (data) {
-            if ( data[0] == "close"){
-                this.end();
-            }
-            else {
-                this.queue(data);
-            }
-        }));
-
-    
-
-    sw.build_input_stream = function(end) {
-        var input = through(function write(data) {
+        },
+        stream : function(end) {
+            var input = through(function write(data) {
             if ( data[0] == "close"){
                 this.end();
             }
@@ -54,8 +51,13 @@ var make_stream = function(cpp_entry_point, opts) {
           },
           end);
         return input;
+        }
+    }
+    sw.close = function (){
+        worker.closeInput();
     }
 
+   
     return sw;
 }
 

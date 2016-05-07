@@ -9,6 +9,20 @@
           '-std=c++11'
         ],
       },
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'ExceptionHandling': 1 # /EHsc
+        }
+      },
+      'configurations': {
+        'Release': {
+          'msvs_settings': {
+            'VCCLCompilerTool': {
+            'ExceptionHandling': 1,
+          }
+        }
+      }
+      },
       "conditions": [
         [ 'OS=="mac"', {
             "xcode_settings": {

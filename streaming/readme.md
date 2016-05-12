@@ -174,9 +174,14 @@ const streaming_addon = worker(addon_path, {foo: "bar"});
 ```
 The optional second parameter is for initialization variables - see the examples below for usage.
 
+### Using the Event Emitter API
 The `streaming_addon` object represents your C++ addon, and `streaming-worker` has added two `EventEmitter`-like interfaces on it - `to` and `from`.  As you might expect, `to` allows you to emit events *to* your addon - your addon will read the messages using the `fromNode.read()` call.  The `from` object lets you listen for events sent *from* your addon - which is done in C++ using the `writeToNode` method.
 
 ```js
+
+streaming_addon.to.emit("input", "here's something");
+streaming_addon.to.emit("input", "here's something else");
+
 streaming_addon.from.on('event', function(message){
     console.log("Got something from the addon!");
 });
@@ -190,6 +195,9 @@ streaming_addon.from.on('close', function() {
 });
 ```
 
+When you send an event to your addon, the C++ code will read a `Message` object whose name is set to the event name (first parameter of `emit`) and data is set to the actual message (second parameter of `emit`).  Likewise, when sending a `Message` object from C++, it's name will be the name of the event that gets emitted.
+
+### Using the Streaming API
 Ok, so that's not exactly "streaming"... the `streaming-worker` adapter also adds two methods for creating actual streams to and from your C++ code too though.  To capture the output of your C++ via a stream, you can use the `stream()` method on the `from` object:
 
 ```js

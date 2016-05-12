@@ -155,7 +155,6 @@ class StreamWorkerWrapper : public Nan::ObjectWrap {
   ~StreamWorkerWrapper() {}
 
   static NAN_METHOD(New) {
-    
     if (info.IsConstructCall()) {
       Callback *data_callback = new Callback(info[0].As<v8::Function>());
       Callback *complete_callback = new Callback(info[1].As<v8::Function>());

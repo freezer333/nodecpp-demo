@@ -18,6 +18,7 @@ setTimeout(function() {
 eo.from.on('even_event', function(value){
     console.log("EVEN:  " + value);
 });
+
 eo.from.on('odd_event', function(value){
     console.log("ODD:   " + value);
 });

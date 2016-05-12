@@ -28,7 +28,7 @@ class Accumulate : public StreamingWorker {
     ~Accumulate(){}
     
     bool filter_by_name(string name) {
-      return ( name == filter && filter.length() > 0);
+      return ( filter.empty() || name == filter);
     }
 
     void Execute (const AsyncProgressWorker::ExecutionProgress& progress) {

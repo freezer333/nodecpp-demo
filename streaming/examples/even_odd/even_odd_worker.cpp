@@ -15,19 +15,19 @@ class EvenOdd : public StreamingWorker {
       , Callback *error_callback, 
       v8::Local<v8::Object> & options) : StreamingWorker(data, complete, error_callback){
 
-        start = 0;
-        if (options->IsObject() ) {
-          v8::Local<v8::Value> start_ = options->Get(New<v8::String>("start").ToLocalChecked());
-          if ( start_->IsNumber() ) {
-            start = start_->NumberValue();
-          }
-          name = "even_odd";
-          v8::Local<v8::Value> name_ = options->Get(New<v8::String>("name").ToLocalChecked());
-          if ( name_->IsString() ) {
-            v8::String::Utf8Value s(name_);
-            name = *s;
-          }
+      start = 0;
+      if (options->IsObject() ) {
+        v8::Local<v8::Value> start_ = options->Get(New<v8::String>("start").ToLocalChecked());
+        if ( start_->IsNumber() ) {
+          start = start_->NumberValue();
         }
+        name = "even_odd";
+        v8::Local<v8::Value> name_ = options->Get(New<v8::String>("name").ToLocalChecked());
+        if ( name_->IsString() ) {
+          v8::String::Utf8Value s(name_);
+          name = *s;
+        }
+      }
     }
     ~EvenOdd(){}
     

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include "addon-streams.h"
+#include "streaming-worker.h"
 
 using namespace std;
 

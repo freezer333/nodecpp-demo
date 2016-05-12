@@ -1,7 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include "addon-streams.h"
+#include "streaming-worker.h"
 #include "json.hpp"  //https://github.com/nlohmann/json
 
 using namespace std;

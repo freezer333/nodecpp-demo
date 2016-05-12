@@ -1,7 +1,9 @@
 # Purpose
 `streaming-worker` is designed to give you a simple interface for sending and receiving events/messages from a long running asynchronous C++ Node.js Addon.
 
-**Note** - this library is really only for creating very specific types of Node.js C++ addons, ones that are relatively long running and either need to receive a continuous stream of inputs or will send a stream of outputs to/from your JavaScript code (or both).  The addons operate in seperate worker threads, and use NAN's [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) to facilitate stream-like and event-like interfaces.
+**Note** - this library is really only for creating very specific types of Node.js C++ addons, ones that are relatively long running and either need to receive a continuous stream of inputs or will send a stream of outputs to/from your JavaScript code (or both).  The addons operate in seperate worker threads, and use `nan`'s [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) to facilitate stream-like and event-like interfaces.
+
+This library is based on a chapter in [Node C++ Integration](http://scottfrees.com/ebooks/nodecpp/) - which covers it's implementation in a lot more detail.
 
 # Usage
 `streaming-worker` is a C++/JS SDK for building streaming addons - it's not an addon itself!.  You create addons by inheriting from the `StreamingWorker` abstract class defined in the SDK.  Your addon, at a minimum, needs to implement a few virtual functions (most importantly, `Execute`), and can utilize standard methods to read and write `Message` objects to and from JavaScript.  `Message` objects are name/value (string) pairs.
@@ -17,9 +19,136 @@ cd nodecpp-demo/streaming
 ```  
 
 ## Step 2:  Build your C++ addon
+When you download the code, the `/dist` directory contains all you need to create a new addon.  To build an addon, you need to setup (probably in a seperate directory) a `binding.gyp` file, a `package.json` file, and whatever C++ source files you'll need for your addon.
+
 ### Setup binding.gyp
+Your `binding.gyp` file is the input to the build process, its necessary whenever you are creating C++ addons.  To use the SDK, you need to make sure you (at a minimum) add the necessary information so `node-gyp` can find the `/dist` directory with the SDK's header file and so it can use `NAN`.  In addition, you'll probably want to enable C++11 at least.
+
+```js
+{
+  "targets": [
+    {
+      "target_name": "ADDON_NAME",
+      "sources": [ "YOUR ADDON SOURCE.cpp" ], 
+      "cflags": ["-Wall", "-std=c++11"],
+      "include_dirs" : ["<!(node -e \"require('nan')\")", "PATH TO YOUR /dist DIRECTORY"],
+      'xcode_settings': {
+        'OTHER_CFLAGS': [
+          '-std=c++11'
+        ],
+      },
+      "conditions": [
+        [ 'OS=="mac"', {
+            "xcode_settings": {
+                'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
+                'OTHER_LDFLAGS': ['-stdlib=libc++'],
+                'MACOSX_DEPLOYMENT_TARGET': '10.7' }
+            }
+        ]
+      ]
+    }
+  ]
+}
+```
+Checkout the examples below for some actual working `binding.gyp` files.
+
 ### Setup package.json
+Your `package.json` works in conjunction with node-gyp, and will ensure `nan` is installed properly.  The key fields you need to put here are:
+1. the ADDON_NAME, which should match the string your put in as `target_name` in `binding.gyp`
+2. `gypfile` should be `true` so `npm install` knows to build the addon
+3. `nan` and `streaming-worker` need to be dependencies.  Remeber, your JavaScript program that uses your addon also uses the JS adapter that comes with this SDK.  You can link it locally, or include it from `npm`.  More on this in Step 3.  
+
+```
+{
+  "name": "ADDON_NAME",
+  "gypfile": true,
+  "dependencies": {
+  	"nan": "*",
+    "streaming-worker" : "file:../../dist"
+  }
+}
+```
+
 ### Implement StreamingWorker interface
+Finally, your C++ addon code!  You'll need to implement a class that inherits from the `StreamingWorker` abstract base class defined in `/dist/streaming-worker.h`.  This class actually already extends `nan`'s AsyncProgressWorker class.  You also need to create a proper constructor in your addon class, along with a factory method to help the base class build your addon.
+
+#### Addon class constructor
+Your constructor must, at a minimum, accept three callback objects and on options object.  You do not need to directly deal with these callbacks in anyway - other than passing them along to the base class constructor.  They are specified by the SDK's JavaScript adapter/module - not your actual JavaScript programs that use the addon.
+
+```cpp
+class MyStreamingAddon : public StreamingWorker {
+  public:
+    MyStreamingAddon(Callback *data, Callback *complete, Callback *error_callback,  v8::Local<v8::Object> & options) 
+          : StreamingWorker(data, complete, error_callback) // MUST pass the callbacks to the base constructor!
+    {
+        if (options->IsObject() ) {
+          // extract any options you want to work with. The user of the addon must supply these from JavaScript
+        }
+    }
+    ...
+};
+```
+
+#### Addon `Execute` method
+Once the addon is created, the base class will queue your addon up as a worker thread, hooked into `lib_uv`'s event loop.  Your addon will be invoked within it's `Execute` function.  **Beware, this function is executed in a worker thread, not the Node.js event loop thread!**.  Synchronization when accessing any state variables (member variables) is your responsibility.  The `Execute` function must accept a `progress` object, which is defined by `nan`'s [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) class.  You won't use it directly, but you'll pass it along to the sending method when you want to send messages to Node.js.
+
+```cpp
+// Member method of MyStreamingAddon
+void Execute (const AsyncProgressWorker::ExecutionProgress& progress) {
+       // send and receive messages from Node.js code
+}
+```
+
+You communicate with Node.js through `Message` objects - which are simple name value pairs (values are strings, feel free to extend the implementation to accomodate other types/templates!).
+
+
+```cpp
+/// defined in streaming-worker.h
+class Message {
+public:
+  string name;
+  string data;
+  Message(string name, string data) : name(name), data(data){}
+};
+```
+
+Your addon inherits a thread-safe queues, `fromNode`, for reading messages sent to it from JavaScript (see below for the JavaScript API).  You can extract Message objects from the queue at any time by calling `read()` - but keep in mind this is a *blocking* call.
+
+Your addon also inherits a thread-safe method for sending messages back to JavaScript, called `writeToNode`.  This call requires two parameters, the `progress` object passed into your `Execute` method, and the message to send.
+
+Below is a simple `Execute` function that receives a message from Node and just returns the square.  It stops if it receives -1.
+
+```cpp
+// Member method of MyStreamingAddon
+void Execute (const AsyncProgressWorker::ExecutionProgress& progress) {
+  int value;
+  do {
+    Message m = fromNode.read();
+    value = std::stoi(m.data);
+    Message tosend("square", std::to_string(value*value));
+    writeToNode(progress, tosend);
+ } while (value > 0);
+}
+```
+
+#### Addon setup code
+You need to add just a little bit of boilerplate C++ code to properly bootstrap your addon.  The following functions are defined outside of your addon class.
+
+The first is a factory method named `create_worker`.  You MUST include this function, and you cannot alter the signature at all.  The base wrapper class calls this to build your particular worker.  The prototype for this function is defined in addon-streams.h
+
+```cpp
+StreamingWorker * create_worker(Callback *data
+    , Callback *complete
+    , Callback *error_callback, v8::Local<v8::Object> & options) {
+        
+ return new MyStreamingAddon(data, complete, error_callback, options);
+}
+```
+Lastly, you need to initialize your module using the standard Node.js convention.  Replace <ADDON_NAME> with whatever you named your module (`target_name` in `binding.gyp`).  Keep `StreamWorkerWrapper::Init` unchanged, it's the bootstrap method defined in `streaming-worker.h`.  It ultimately calls the `create_worker` method defined above.
+
+```cpp
+NODE_MODULE(<ADDON_NAME>, StreamWorkerWrapper::Init)
+```
 
 ## Step 3:  Write your JavaScript program
 A Node.js program that uses the addon must require the `streaming-worker` module:

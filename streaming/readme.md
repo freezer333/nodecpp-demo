@@ -17,6 +17,7 @@ To use `streaming-worker` in your JavaScript code, you need to do an `npm instal
 # Examples
 Below are five examples designed to give you an overview of some of the ways you can interact with addons written using the streaming-worker API.  The first two use the event emitter interface to communicate with the addons.  The third and fourth examples show you how to use the stream interface.  The fifth example combines a few of the examples by piping addons together.
 
+To get started, do a `git clone https://github.com/freezer333/nodecpp-demo.git` and `cd` into the `streaming` directory.
 ## Prime Factorization
 Using startup parameters and listening to events from the addon
 

@@ -1,7 +1,6 @@
 "use strict"; 
 
 const worker = require("streaming-worker");
-const through = require('through');
 const path = require("path");
 
 var addon_path = path.join(__dirname, "build/Release/factorization");

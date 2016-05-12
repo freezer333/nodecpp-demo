@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <iterator>
 #include <thread>
 #include <deque>
 #include <mutex>

@@ -1,10 +1,20 @@
 # Purpose
 `streaming-worker` is designed to give you a simple interface for sending and receiving events/messages from a long running asynchronous C++ Node.js Addon.
 
-# Usage
-To use `streaming-worker` in your JavaScript code, you need to do an `npm install streaming-worker`.  The module exports a single factory method which accepts a path to an asynchronous C++ Node.js addon that is setup to use the streaming-worker (see below) C++ API.  The second parameter (optional) is for any parameters you wish to send to C++ to initialize the addon.
+**Note** - this library is really only for creating very specific types of Node.js C++ addons, ones that are relatively long running and either need to receive a continuous stream of inputs or will send a stream of outputs to/from your JavaScript code (or both).  The addons operate in seperate worker threads, and use NAN's [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) to facilitate stream-like and event-like interfaces.
 
-## Step 1:  Download `/dist` or `npm streaming-worker`
+# Usage
+`streaming-worker` is a C++/JS SDK for building streaming addons - it's not an addon itself!.  You create addons by inheriting from the `StreamingWorker` abstract class defined in the SDK.  Your addon, at a minimum, needs to implement a few virtual functions (most importantly, `Execute`), and can utilize standard methods to read and write `Message` objects to and from JavaScript.  `Message` objects are name/value (string) pairs.
+
+Once your C++ addon is built, you'll package it up with the JavaScript adapter (`index.js`) in the SDK.  This exports a single factory method which accepts a path to the asynchronous C++ Node.js addon you've built.  The second parameter (optional) is for any parameters you wish to send to C++ to initialize the addon.
+
+## Step 1:  Download `/dist`
+To build an addon using this interface, you need to download the C++ header and JavaScript hook/adapter. You can get the source from github:
+
+```
+git clone https://github.com/freezer333/nodecpp-demo.git
+cd nodecpp-demo/streaming
+```  
 
 ## Step 2:  Build your C++ addon
 ### Setup binding.gyp
@@ -12,14 +22,101 @@ To use `streaming-worker` in your JavaScript code, you need to do an `npm instal
 ### Implement StreamingWorker interface
 
 ## Step 3:  Write your JavaScript program
+A Node.js program that uses the addon must require the `streaming-worker` module:
 
+```js
+const worker = require("streaming-worker");
+```
+Since you've already downloaded the SDK to develop your addon, you might want to just use your local `streaming-worker` module - you can just put the following in your `package.json` file:
+
+```js
+"dependencies": {
+    "nan": "*",
+    "streaming-worker" : "file:<path to /dist directory>"
+  }
+```
+
+Alternatively, you can do an `npm install --save streaming-worker`.  The module exports a factory function, which is used to startup your C++ addon.  All you need to do is give it the file path where your addon is located:
+
+```js
+const path = require("path");
+var addon_path = path.join(__dirname, "PATH TO ADDON");
+const streaming_addon = worker(addon_path, {foo: "bar"});
+```
+The optional second parameter is for initialization variables - see the examples below for usage.
+
+The `streaming_addon` object represents your C++ addon, and `streaming-worker` has added two `EventEmitter`-like interfaces on it - `to` and `from`.  As you might expect, `to` allows you to emit events *to* your addon - your addon will read the messages using the `fromNode.read()` call.  The `from` object lets you listen for events sent *from* your addon - which is done in C++ using the `writeToNode` method.
+
+```js
+streaming_addon.from.on('event', function(message){
+    console.log("Got something from the addon!");
+});
+
+streaming_addon.from.on('error', function(e) {
+    console.error("Something has gone wrong in the addon");
+});
+
+streaming_addon.from.on('close', function() {
+    console.error("The addon has terminated (natural causes)");
+});
+```
+
+Ok, so that's not exactly "streaming"... the `streaming-worker` adapter also adds two methods for creating actual streams to and from your C++ code too though.  To capture the output of your C++ via a stream, you can use the `stream()` method on the `from` object:
+
+```js
+const str_out = streaming_addon.from.stream();
+```
+
+It's likely you'll want to pipe this to something, I recommend getting familiar with [`through`](https://github.com/dominictarr/through).
+
+```js
+str_out.pipe(
+    through(function(message) { 
+      	this.queue(JSON.parse(message));
+    })).pipe(
+    through(function(message) {
+        console.log(message);
+    }));
+```
+
+To create an input stream, us the `stream` method on the `to` object:
+
+```js
+const str_in = streaming_addon.to.stream("value",
+	function () {
+		str_in.to.emit('value', -1);
+	});
+```
+Unlike the output stream, you need to specify a few more things when creating the input stream, since `streaming-worker` needs to know how to turn the streamed data into `Message` objects for your addon to read.  The first parameter specifies the name that should be attached to each data put into the stream.  The second parameter is a callback that will be invoked when the stream is closed.  Under normal circumstances, your C++ code is likely to be looking for some sort of sentinal value - and this is your opportunity to send it.  
+
+```js
+const streamify = require('stream-array');
+
+// the addon will get -1 when the array is drained, 
+// because we specified the end callback above 
+streamify([1, 2, 3]).pipe(input); 
+```
+
+If the stream is expected to receive the sentinal anyway, then you can just leave the callback undefined.
+
+```js
+const str_in = streaming_addon.to.stream("value");
+streamify([1, 2, 3, -1]).pipe(input); // the addon receives the -1 it is looking for...
+```
 
 # Examples
 Below are five examples designed to give you an overview of some of the ways you can interact with addons written using the streaming-worker API.  The first two use the event emitter interface to communicate with the addons.  The third and fourth examples show you how to use the stream interface.  The fifth example combines a few of the examples by piping addons together.
 
-To get started, do a `git clone https://github.com/freezer333/nodecpp-demo.git` and `cd` into the `streaming` directory.
+To get started:
+
+```
+git clone https://github.com/freezer333/nodecpp-demo.git
+cd nodecpp-demo/streaming
+``` 
 ## Prime Factorization
-Using startup parameters and listening to events from the addon
+This example uses a C++ addon to compute the prime factorization of larg(ish) numbers.  The number to be factored is passed in as options to the addon, which immediately begins emitting prime factors as it finds them.  The JavaScript code listens to the event emitter interface exposed by the C++ worker and simply prints the factors to the screen.  
+
+The demo is found in `/streaming/examples/factorization`.  Do an `npm install` followed by an `npm start` to run it. 
 
 ## Even/Odd Generator
 This example shows you how to send input to your addons via the event emitter interface.  The `even_odd` C++ code sits in a loop waiting for integer input (N).  Once received, if N is not -1, it emits `even_event` and `odd_event` messages for each number from 0...N.  
@@ -54,3 +151,5 @@ This example doesn't create any new C++ addons, it just demonstrates how you can
 Finally, the `even_odd` addon is kicked off by emiting `10` to it using its event emitter interface.  The result is that both accumulators receive all the events, but sum up only even or odd respectively.
 
 The demo is found in `/streaming/examples/piping`.  Do an `npm install` followed by an `npm start` to run it.  **Note:** in order to use this example, you also need to do an `npm install` in the `even_odd` and `accumulator` examples!
+
+*Note - this example is only working on Windows and Linux, there is a hangup whenever two addons are used in OS X - working on it!  Pull requests welcome!*

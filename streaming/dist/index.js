@@ -40,7 +40,7 @@ var make_stream = function(cpp_entry_point, opts) {
         emit : function(name, data) {
             worker.sendToAddon(name, data);
         },
-        stream : function(end) {
+        stream : function(name, end) {
             var input = through(function write(data) {
                 if (Array.isArray(data)) {
                     if ( data[0] == "close"){
@@ -51,7 +51,7 @@ var make_stream = function(cpp_entry_point, opts) {
                     }
                 }
                 else {
-                    sw.to.emit("data", data);
+                    sw.to.emit(name, data);
                 }
           },
           end);

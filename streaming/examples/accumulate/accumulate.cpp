@@ -58,4 +58,4 @@ StreamingWorker * create_worker(Callback *data
  return new Accumulate(data, complete, error_callback, options);
 }
 
-NODE_MODULE(even_odd_worker, StreamWorkerWrapper::Init)
+NODE_MODULE(accumulate, StreamWorkerWrapper::Init)

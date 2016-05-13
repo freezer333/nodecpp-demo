@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <random>
 #include <thread>
 #include "streaming-worker.h"
 #include "json.hpp"  //https://github.com/nlohmann/json
@@ -51,4 +52,4 @@ StreamingWorker * create_worker(Callback *data
  return new Sensor(data, complete, error_callback, options);
 }
 
-NODE_MODULE(factorization, StreamWorkerWrapper::Init)
+NODE_MODULE(sensor_sim, StreamWorkerWrapper::Init)

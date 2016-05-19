@@ -1,0 +1,103 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'install' ]
+2 info using npm@3.8.3
+3 info using node@v5.10.1
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly install normalizeTree
+8 silly loadCurrentTree Finishing
+9 silly loadIdealTree Starting
+10 silly install loadIdealTree
+11 silly cloneCurrentTree Starting
+12 silly install cloneCurrentTreeToIdealTree
+13 silly cloneCurrentTree Finishing
+14 silly loadShrinkwrap Starting
+15 silly install loadShrinkwrap
+16 silly loadShrinkwrap Finishing
+17 silly loadAllDepsIntoIdealTree Starting
+18 silly install loadAllDepsIntoIdealTree
+19 silly loadAllDepsIntoIdealTree Finishing
+20 silly idealTree:prePrune primes@1.0.0
+20 silly idealTree:prePrune └── nan@2.3.3
+21 silly loadIdealTree Finishing
+22 silly currentTree primes@1.0.0
+22 silly currentTree └── nan@2.3.3
+23 silly idealTree primes@1.0.0
+23 silly idealTree └── nan@2.3.3
+24 silly generateActionsToTake Starting
+25 silly install generateActionsToTake
+26 silly generateActionsToTake Finishing
+27 silly diffTrees action count 0
+28 silly decomposeActions action count 0
+29 silly executeActions Starting
+30 silly install executeActions
+31 silly doSerial global-install 0
+32 silly doParallel fetch 0
+33 verbose correctMkdir /Users/sfrees/.npm/_locks correctMkdir not in flight; initializing
+34 verbose lock using /Users/sfrees/.npm/_locks/staging-61787c7e172b5de8.lock for /Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial/node_modules/.staging
+35 silly doParallel extract 0
+36 silly doParallel preinstall 0
+37 silly doReverseSerial remove 0
+38 silly doSerial move 0
+39 silly doSerial finalize 0
+40 silly doSerial build 0
+41 silly doSerial global-link 0
+42 silly doParallel update-linked 0
+43 silly doSerial install 0
+44 silly doSerial postinstall 0
+45 verbose unlock done using /Users/sfrees/.npm/_locks/staging-61787c7e172b5de8.lock for /Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial/node_modules/.staging
+46 silly executeActions Finishing
+47 silly rollbackFailedOptional Starting
+48 silly rollbackFailedOptional Finishing
+49 silly runTopLevelLifecycles Starting
+50 silly install runTopLevelLifecycles
+51 silly preinstall primes@1.0.0 /Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial/primes-325168b1
+52 info lifecycle primes@1.0.0~preinstall: primes@1.0.0
+53 silly lifecycle primes@1.0.0~preinstall: no script for preinstall, continuing
+54 silly build primes@1.0.0
+55 info linkStuff primes@1.0.0
+56 silly linkStuff primes@1.0.0 has /Users/sfrees/projects/nodecpp-ebook/code/chapter07 as its parent node_modules
+57 verbose linkBins primes@1.0.0
+58 verbose linkMans primes@1.0.0
+59 silly install primes@1.0.0 /Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial/primes-325168b1
+60 info lifecycle primes@1.0.0~install: primes@1.0.0
+61 verbose lifecycle primes@1.0.0~install: unsafe-perm in lifecycle true
+62 verbose lifecycle primes@1.0.0~install: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial/node_modules/.bin:/usr/local/bin:/Library/Frameworks/Python.framework/Versions/3.4/bin:/Library/Frameworks/Python.framework/Versions/3.4/bin:/Users/sfrees/.rvm/gems/ruby-2.1.1/bin:/Users/sfrees/.rvm/gems/ruby-2.1.1@global/bin:/Users/sfrees/.rvm/rubies/ruby-2.1.1/bin:/Applications/MAMP/bin/php/php5.5.3:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/usr/local/git/bin:/Library/TeX/texbin:/Users/sfrees/.rvm/bin
+63 verbose lifecycle primes@1.0.0~install: CWD: /Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial
+64 silly lifecycle primes@1.0.0~install: Args: [ '-c', 'node-gyp rebuild' ]
+65 silly lifecycle primes@1.0.0~install: Returned: code: 1  signal: null
+66 info lifecycle primes@1.0.0~install: Failed to exec install script
+67 warn primes@1.0.0 No description
+68 warn primes@1.0.0 No repository field.
+69 verbose stack Error: primes@1.0.0 install: `node-gyp rebuild`
+69 verbose stack Exit status 1
+69 verbose stack     at EventEmitter.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/lifecycle.js:239:16)
+69 verbose stack     at emitTwo (events.js:100:13)
+69 verbose stack     at EventEmitter.emit (events.js:185:7)
+69 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:24:14)
+69 verbose stack     at emitTwo (events.js:100:13)
+69 verbose stack     at ChildProcess.emit (events.js:185:7)
+69 verbose stack     at maybeClose (internal/child_process.js:850:16)
+69 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:215:5)
+70 verbose pkgid primes@1.0.0
+71 verbose cwd /Users/sfrees/projects/nodecpp-ebook/code/chapter07/polynomial
+72 error Darwin 14.5.0
+73 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "install"
+74 error node v5.10.1
+75 error npm  v3.8.3
+76 error code ELIFECYCLE
+77 error primes@1.0.0 install: `node-gyp rebuild`
+77 error Exit status 1
+78 error Failed at the primes@1.0.0 install script 'node-gyp rebuild'.
+78 error Make sure you have the latest version of node.js and npm installed.
+78 error If you do, this is most likely a problem with the primes package,
+78 error not with npm itself.
+78 error Tell the author that this fails on your system:
+78 error     node-gyp rebuild
+78 error You can get information on how to open an issue for this project with:
+78 error     npm bugs primes
+78 error Or if that isn't available, you can get their info via:
+78 error     npm owner ls primes
+78 error There is likely additional logging output above.
+79 verbose exit [ 1, true ]

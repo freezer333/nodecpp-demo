@@ -84,45 +84,17 @@ void encodeBMP(std::vector<unsigned char>& bmp, const unsigned char* image, int 
 bool do_convert(std::vector<unsigned char> & input_data, std::vector<unsigned char> & bmp)
 {
   std::vector<unsigned char> image; //the raw pixels
-  
   unsigned width, height;
-
   unsigned error = lodepng::decode(image, width, height, input_data, LCT_RGB, 8);
-
-  if(error)
-  {
+  if(error) {
     std::cout << "error " << error << ": " << lodepng_error_text(error) << std::endl;
     return false;
   }
-
-  
   encodeBMP(bmp, &image[0], width, height);
-  
   return true;
-  
 }
 
 
-
-NAN_METHOD(SaveBMP) {
-    v8::String::Utf8Value val(info[0]->ToString());
-    
-    std::string outfile (*val);
-    
-    unsigned char*buffer = (unsigned char*) node::Buffer::Data(info[1]->ToObject());
-    unsigned int size = info[2]->Uint32Value();
-   
-    std::vector<unsigned char> png_data(buffer, buffer + size);
-    
-    std::vector<unsigned char> bmp; 
-    if ( do_convert(png_data, bmp)) {
-        info.GetReturnValue().Set(Nan::New(false)); 
-    }
-    else {
-        lodepng::save_file(bmp, outfile);    
-        info.GetReturnValue().Set(Nan::New(true));
-    }
-}
 
 
 
@@ -149,12 +121,47 @@ NAN_METHOD(GetBMP) {
 }
 
 
+class PngToBmpWorker : public AsyncWorker {
+    public:
+    PngToBmpWorker(Callback * callback, 
+        v8::Local<v8::Object> &pngBuffer, int size) 
+        : AsyncWorker(callback) {
+        unsigned char*buffer = (unsigned char*) node::Buffer::Data(pngBuffer);
+        std::vector<unsigned char> tmp(buffer, buffer +  (unsigned int) size);
+        png_data = tmp;
+    }
+    void Execute() {
+       bmp = new vector<unsigned char>();
+       do_convert(png_data, *bmp);
+    }
+    void HandleOKCallback () {
+        Local<Object> bmpData = 
+               NewBuffer((char *)bmp->data(), 
+               bmp->size(), buffer_delete_callback, 
+               bmp).ToLocalChecked();
+        Local<Value> argv[] = { bmpData };
+        callback->Call(1, argv);
+    }
+
+    private:
+        vector<unsigned char> png_data;
+        std::vector<unsigned char> * bmp;
+};
+
+NAN_METHOD(GetBMPAsync) {
+    int size = To<int>(info[1]).FromJust();
+    v8::Local<v8::Object> pngBuffer = info[0]->ToObject();
+    Callback *callback = new Callback(info[2].As<Function>());
+    AsyncQueueWorker(new PngToBmpWorker(callback, pngBuffer , size));
+}
+
 NAN_MODULE_INIT(Init) {
-   Nan::Set(target, New<String>("saveBMP").ToLocalChecked(),
-        GetFunction(New<FunctionTemplate>(SaveBMP)).ToLocalChecked());
-        
+         
    Nan::Set(target, New<String>("getBMP").ToLocalChecked(),
         GetFunction(New<FunctionTemplate>(GetBMP)).ToLocalChecked());
+        
+   Nan::Set(target, New<String>("getBMPAsync").ToLocalChecked(),
+        GetFunction(New<FunctionTemplate>(GetBMPAsync)).ToLocalChecked());
 }
 
 NODE_MODULE(basic_nan, Init)

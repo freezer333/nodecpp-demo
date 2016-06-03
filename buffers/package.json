@@ -1,0 +1,12 @@
+{
+  "name": "png2bmp",
+  "version": "0.0.1",
+  "private": true,
+  "gypfile": true,
+  "scripts": {
+    "start": "node index.js sample.png"
+  },
+  "dependencies": {
+  	"nan": "*"
+  }
+}

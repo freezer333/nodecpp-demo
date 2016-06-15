@@ -139,8 +139,8 @@ class PngToBmpWorker : public AsyncWorker {
                NewBuffer((char *)bmp->data(), 
                bmp->size(), buffer_delete_callback, 
                bmp).ToLocalChecked();
-        Local<Value> argv[] = { bmpData };
-        callback->Call(1, argv);
+        Local<Value> argv[] = { Nan::Null(), bmpData };
+        callback->Call(2, argv);
     }
 
     private:

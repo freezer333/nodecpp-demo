@@ -58,6 +58,15 @@ print_rain_results(results);
 
 
 // Part 4 - calling asynchronous c++ addon
-rainfall.calculate_results_async(locations, print_rain_results);
+rainfall.calculate_results_async(locations, 
+  function(err, result) {
+    if (err ) {
+      console.log(err);
+    }
+    else {
+      print_rain_results(result);
+    }
+    
+  });
 
 console.log("Async results probably still not here yet...")

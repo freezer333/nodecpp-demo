@@ -1,0 +1,11 @@
+{
+  "name": "cpp11",
+  "version": "1.0.0",
+  "main": "./build/Release/cpp11",
+  "gypfile": true,
+  "author": "Scott Frees <scott.frees@gmail.com> (http://scottfrees.com/)",
+  "license": "ISC", 
+  "dependencies": {
+    "nan": "^2.3.3"
+  }
+}

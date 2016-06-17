@@ -1,0 +1,8 @@
+{
+  "name": "hello-world-nodecpp",
+  "version": "1.0.0",
+  "main": "./build/Release/hello_addon",
+  "gypfile": true,
+  "author": "Scott Frees <scott.frees@gmail.com> (http://scottfrees.com/)",
+  "license": "ISC"  
+}

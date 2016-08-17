@@ -1,0 +1,10 @@
+{
+  "name": "lambda-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Scott Frees <scott.frees@gmail.com> (http://scottfrees.com/)",
+  "license": "ISC", 
+  "dependencies": {
+    "average": "file:../addon"
+  }
+}

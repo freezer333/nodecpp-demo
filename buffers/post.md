@@ -1,19 +1,21 @@
 # Using Buffers to share data between Node.js and C++
-One of the really nice things about developing with Node.js is our ability to move pretty seamlessly between JavaScript and native C++ code - thanks to the V8's addon API.  The ability to move into C++ is sometimes driven by processing speed; but more often it's because we already have C++ code and we just want to be able to use it from JavaScript.  We can categorize the different use cases for addons on (at least) two axes - (1) amount of processing time we'll spend in the C++ code, and (2) the amount of data flowing between C++ and JavaScript.
+One of the really nice things about developing with Node.js is the ability to move fairly seamlessly between JavaScript and native C++ code - thanks to the V8's addon API.  The ability to move into C++ is sometimes driven by processing speed; but more often it's because we already have C++ code and we just want to be able to use it from JavaScript.  We can categorize the different use cases for addons over (at least) two axes - (1) amount of processing time we'll spend in the C++ code, and (2) the amount of data flowing between C++ and JavaScript.
 
-QUADRANT IMAGE
+![CPU vs. Data quadrant](https://scottfrees.com/quadrant.png)
 
-Most articles discussing C++ addons for Node.js focus on the differences between the left and right quadrants.  If you are in the left quadrants (short processing time), our actual addon could be synchronous - meaning (EXPLAIN).  In the right quadrants, you would almost certainly design the addon using the asynchronous pattern (EXPLAIN, link to blog).  The difference between the top and bottom quadrants is often overlooked - but can be just as important.  This post is going to focus on this topic - and we'll wind up presenting Node.js Buffers as a powerful solution to the data problems we are about to describe.  
+Most articles discussing C++ addons for Node.js focus on the differences between the left and right quadrants.  If you are in the left quadrants (short processing time), your addon can possibly be synchronous - meaning the C++ code that executes is run directly in the Node.js event loop when called.  In this situation, your addon function blocks - the calling JavaScript code simply waits for the return value from the addon.  In the right quadrants, you would almost certainly design the addon using the asynchronous pattern.  In an asynchronous addon function, the calling JavaScript code returns immediately.  The calling code passes a callback function to the addon, and the addon does it's work in a separate worker thread. This avoids locking up the Node.js event loop, as the addon function does not block.  
+
+The difference between the top and bottom quadrants is often overlooked however - but can be just as important.  This post is going to focus on this topic - and we'll wind up presenting Node.js Buffers as a powerful solution to the data problems we are about to describe.  
 
 ## V8 vs. C++ memory and data
-If you are new to writing native addons, one of the first things you must master is the differences between V8-owned data (which you **can** access from C++ addons) and normal C++ memory allocations.  DEFINE V8-ownded vers C++ (heap).
+If you are new to writing native addons, one of the first things you must master is the differences between V8-owned data (which you **can** access from C++ addons) and normal C++ memory allocations.  When we say "V8-owned", we are referring to the storage cells that hold JavaScript data.  These storage cells are accessibly through V8's C++ API - but they aren't ordinary C++ variables, they can be accessed in only limited ways.  While your addon *could* restrict itself to ONLY using V8 data, it's more than likely it will also create it's own variables - in plain old C++.  These could be stack or heap variables, and of course are completely independent of V8.
 
-In JavaScript, primitives (numbers, strings, booleans, etc.) are *immutable* - storage containers associated with primitive JavaScript variables cannot be altered by a C++ addon.  The primitive JavaScript variables can be reassigned to *new storage containers* created by C++ - but this means changing data always results in *new* memory allocation.  In the upper quadrant (low data transfer), this really isn't a big deal - if you are designing an addon that doesn't have a lot of data exchange the overhead of all the new memory allocation in your addon probably doesn't mean much.  As your addons moves closer to the lower quadrant however, the allocation / copying starts to cost you.  For one, it costs you in terms of peak memory usage, but more insidiously it also costs you in performance!  The time cost of copying all this data between JavaScript (V8 storage cells) to C++ (and back) usually kills the performance benefits you might be getting from running C++ in the first place!  For addons in the lower left quadrant (low processing, high data usage), the latency associated with data copying can push your addon towards the right - forcing you to consider an asynchronous design.  
+In JavaScript, primitives (numbers, strings, booleans, etc.) are *immutable* - storage cells associated with primitive JavaScript variables cannot be altered by a C++ addon.  The primitive JavaScript variables can be reassigned to *new storage cells* created by C++ - but this means changing data always results in *new* memory allocation.  In the upper quadrant (low data transfer), this really isn't a big deal - if you are designing an addon that doesn't have a lot of data exchange, then the overhead of all the new memory allocation in your addon probably doesn't mean much.  As your addons moves closer to the lower quadrant however, the allocation / copying starts to cost you.  For one, It costs you in terms of peak memory usage, and **it also costs you in performance**!  The time cost of copying all this data between JavaScript (V8 storage cells) to C++ (and back) usually kills the performance benefits you might be getting from running C++ in the first place!  For addons in the lower left quadrant (low processing, high data usage), the latency associated with data copying can push your addon towards the right - forcing you to consider an asynchronous design.  
 
 ## V8 memory and asynchronous addons  
-In asynchronous addons, we execute the bulk of our C++ processing code a worker thread.  This allows the initial call into the addon to return quickly to JavaScript - freeing up the Node.js event loop to continue it's business.  An asynchronous addon will invoke a JavaScript callback function when it has completed (or at least whenever it has something to return).  If you are unfamiliar with asynchronous callbacks, you might want to checkout a few tutorials (like [here](http://blog.scottfrees.com/building-an-asynchronous-c-addon-for-node-js-using-nan) and [here](http://blog.scottfrees.com/c-processing-from-node-js-part-4-asynchronous-addons)).   
+In asynchronous addons, we execute the bulk of our C++ processing code a worker thread.  If you are unfamiliar with asynchronous callbacks, you might want to checkout a few tutorials (like [here](http://blog.scottfrees.com/building-an-asynchronous-c-addon-for-node-js-using-nan) and [here](http://blog.scottfrees.com/c-processing-from-node-js-part-4-asynchronous-addons)).   
 
-A central tenant of asynchronous addons is that *you can't access V8 (JavaScript) memory outside the event-loop's thread*.  This leads us to our next problem - if we have lots of data, that data must be copied our of V8 memory and into your addon's native address space *from the event loop's thread*, before the worker thread is spawned.  Likewise, any data produced or modified by the worker threads must be copied back into V8 by code executing in the event loop (in the callback).  If you are interested in high throughouput Node.js applications, you should hate spending lots of time in the event loop copying data!
+A central tenant of asynchronous addons is that *you can't access V8 (JavaScript) memory outside the event-loop's thread*.  This leads us to our next problem - if we have lots of data, that data must be copied out of V8 memory and into your addon's native address space *from the event loop's thread*, before the worker thread starts.  Likewise, any data produced or modified by the worker thread must be copied back into V8 by code executing in the event loop (in the callback).  If you are interested in high throughput Node.js applications, you should hate spending lots of time in the event loop copying data!
 
 ![Creating copies for input and output for a C++ worker thread](https://raw.githubusercontent.com/freezer333/node-v8-workers/master/imgs/copying.gif)
 
@@ -22,10 +24,41 @@ Ideally, we'd prefer a way to do this:
 ![Accessing V8 data directly from C++ worker thread](https://raw.githubusercontent.com/freezer333/node-v8-workers/master/imgs/inplace.gif)
 
 ## Buffers to the rescue
+So, we have two somewhat related problems.  When working with synchronous addons, unless we aren't changing/producing data, it's likely we'll need to spend a lot of time moving our data between V8 storage cells and plain old C++ variables - which costs us.  If we are working with asynchronous addons - where ideally we should spend as little time in the event loop as possible, we are still "up a creek" - since we *must* do our data copying in the event loop's thread due to V8's multi-threaded restrictions.  This is where an often overlooked features of Node.js helps us with addon development - the `Buffer`.  Quoting the[Node.js official documentation](https://nodejs.org/api/buffer.html), 
+
+> Instances of the Buffer class are similar to arrays of integers but correspond to fixed-sized, raw memory allocations outside the V8 heap. 
+
+This is exactly what we are looking for - because the data inside a Buffer is *not stored in a V8 storage cell*, it is not subject to the multi-threading rules of V8.  This means we can interact with it **in place** from a C++ worker thread started by an asynchronous addon.
+
+### How Buffers work
+Buffers store raw binary data, they are found in the Node.js API for reading files and other I/O devices.  
+
+Borrowing again from some examples in the Node.js documentation, we can create unitialized buffers of a specified size, buffers pre-set with a specified value, buffers from arrays of bytes, and buffers from strings.
+
+```
+// buffer with size 10 bytes
+const buf1 = Buffer.alloc(10);       
+
+// buffer filled with 1's (10 bytes)
+const buf2 = Buffer.alloc(10, 1);    
+
+//buffer containing [0x1, 0x2, 0x3]
+const buf3 = Buffer.from([1, 2, 3]); 
+
+// buffer containing ASCII bytes [0x74, 0x65, 0x73, 0x74].
+const buf4 = Buffer.from('test');  
+
+// buffer containing bytes from a file
+const buf5 = fs.readFileSync("some file");
+``` 
+
+Buffers can be turned back into traditional JavaScript data (strings) or written back out to files, databases, or other I/O devices.
+
+### How to access Buffers in C++
+When building an addon for Node.js, the best place to start is by making use of the NAN (Native Abstractions for Node.js) API rather than directly using the V8 API - which can be a moving target.  There are many tutorials on the web for getting started with NAN addons - including [examples](https://github.com/nodejs/nan#example) in NAN's codebase itself.
+
 
 > Present Buffer API in more depth.  Remove original synchronous version.  Remove original file-based version too.
-
-`Buffer` objects are an interesting aspect OF C++ addon development, first because they are in fact *not* part of V8 - but part of Node.js.  Secondly, `Buffer` object data is unique in that it is *not* allocated inside the V8 heap - an attribute that can allow us to sidestep some data copying when dealing with C++ addons and worker threads (which will be discussed below). 
 
 In this section, we'll look at how `Buffer` objects can be passed to and from C++ addons using NAN.  NAN is used because the `Buffer` object API has actually undergone some significant changes recently, and NAN will shield us from these issues.  We'll look at `Buffer` objects through the lens of an image converter - specifically converting binary png image data into bitmap formatted binary data.
 

@@ -55,7 +55,21 @@ const buf5 = fs.readFileSync("some file");
 Buffers can be turned back into traditional JavaScript data (strings) or written back out to files, databases, or other I/O devices.
 
 ### How to access Buffers in C++
-When building an addon for Node.js, the best place to start is by making use of the NAN (Native Abstractions for Node.js) API rather than directly using the V8 API - which can be a moving target.  There are many tutorials on the web for getting started with NAN addons - including [examples](https://github.com/nodejs/nan#example) in NAN's codebase itself.
+When building an addon for Node.js, the best place to start is by making use of the NAN (Native Abstractions for Node.js) API rather than directly using the V8 API - which can be a moving target.  There are many tutorials on the web for getting started with NAN addons - including [examples](https://github.com/nodejs/nan#example) in NAN's code base itself.  I've written a bit about it [here](http://blog.scottfrees.com/building-an-asynchronous-c-addon-for-node-js-using-nan), and it's also covered in a lot of depth in my [ebook](https://scottfrees.com/ebooks/nodecpp/).  While I'm going to assume you know the basics of addon development, lets take a look specifically at how `Buffers` are used.  
+
+First lets see how an addon can access a Buffer sent to it from JavaScript.  We'll start with a simple JS program that require's an addon that we'll create in a moment:
+
+```
+addon that rotates text
+```
+ 
+```
+C++ addon
+```
+
+NAN's documentation on [`Buffer`s](https://github.com/nodejs/nan/blob/master/doc/buffers.md)
+
+Show how a buffer can be created in addon and returned. 
 
 
 > Present Buffer API in more depth.  Remove original synchronous version.  Remove original file-based version too.
@@ -457,3 +471,11 @@ png2bmp.getBMPAsync(png_buffer,
     fs.writeFileSync(bmp_file, bmp_buffer);
 }); 
 ~~~~~~~~~~
+
+## Summary
+This post has hopefully given you a few key take-aways:
+
+1. You can't ignore the costs of copying data between V8 storage cells and C++ variables - if you aren't careful, you can easily kill the performance boost you might have thought you were getting by dropping into C++ to perform your work!
+2. Buffers offer a way to work with the same data in both JavaScript and C++ - thus avoiding the need to create copies.
+
+I hope this post helps you boost the performance of your addons!  If this article has wet your appetite for developing addons for the first time, or if you are looking for some more tips on how to design them, please check out my [ebook on C++ and Node.js Integration](https://scottfrees.com/ebooks/nodecpp/).

@@ -35,7 +35,7 @@ Buffers store raw binary data, they are found in the Node.js API for reading fil
 
 Borrowing again from some examples in the Node.js documentation, we can create unitialized buffers of a specified size, buffers pre-set with a specified value, buffers from arrays of bytes, and buffers from strings.
 
-```
+```js
 // buffer with size 10 bytes
 const buf1 = Buffer.alloc(10);       
 
@@ -59,27 +59,111 @@ When building an addon for Node.js, the best place to start is by making use of 
 
 First lets see how an addon can access a Buffer sent to it from JavaScript.  We'll start with a simple JS program that require's an addon that we'll create in a moment:
 
+```js
+'use strict';
+// Requiring the addon that we'll build in a moment...
+const addon = require('./build/Release/buffer_example');
+
+// Allocates memory holding ASCII "ABC" outside of V8.
+const buffer = Buffer.from("ABC");
+
+// synchronous, rotates each character by +13
+addon.rotate(buffer, buffer.length, 13);
+
+console.log(buffer.toString('ascii'));
 ```
-addon that rotates text
-```
+
+The expected output is "NOP", the ascii rotation by 13 of "ABC".  Let's take a look the addon - it consists of three files (in the same directory, for simplicity): 
  
+```js
+// binding.gyp
+{
+  "targets": [
+    {
+        "target_name": "buffer_example",
+        "sources": [ "buffer_example.cpp" ], 
+        "include_dirs" : ["<!(node -e \"require('nan')\")"]
+    }
+  ]
+}
 ```
-C++ addon
+
+```js
+//package.json
+{
+  "name": "buffer_example",
+  "version": "0.0.1",
+  "private": true,
+  "gypfile": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+  	"nan": "*"
+  }
+}
 ```
 
-NAN's documentation on [`Buffer`s](https://github.com/nodejs/nan/blob/master/doc/buffers.md)
+```c++
+// buffer_example.cpp
+#include <nan.h>
+using namespace Nan;
+using namespace v8;
 
-Show how a buffer can be created in addon and returned. 
+NAN_METHOD(rotate) {
+    char* buffer = (char*) node::Buffer::Data(info[0]->ToObject());
+    unsigned int size = info[1]->Uint32Value();
+    unsigned int rot = info[2]->Uint32Value();
+   
+    for(unsigned int i = 0; i < size; i++ ) {
+        buffer[i] += rot;
+    }   
+}
 
+NAN_MODULE_INIT(Init) {
+   Nan::Set(target, New<String>("rotate").ToLocalChecked(),
+        GetFunction(New<FunctionTemplate>(rotate)).ToLocalChecked());
+}
 
-> Present Buffer API in more depth.  Remove original synchronous version.  Remove original file-based version too.
+NODE_MODULE(buffer_example, Init)
+```
 
-In this section, we'll look at how `Buffer` objects can be passed to and from C++ addons using NAN.  NAN is used because the `Buffer` object API has actually undergone some significant changes recently, and NAN will shield us from these issues.  We'll look at `Buffer` objects through the lens of an image converter - specifically converting binary png image data into bitmap formatted binary data.
+The most interesting file is `buffer_example.cpp` - notice we've used `node::Buffer`'s `Data` method to convert the first parameter sent to the addon to an unsigned character array.  This is now free for us to use in any way we see fit - in this case we just perform an ASCII rotation of the text.  Notice there is no return value - the memory associated with the Buffer has been modified **in place**.
 
-All of the code for this section is available in full in the `nodecpp-demo` repository at [https://github.com/freezer333/nodecpp-demo](https://github.com/freezer333/nodecpp-demo), under the "Buffers" section.
+We can build the addon by just typing `npm install` - the `package.json` tells npm to download NAN and build the addon using the `binding.gyp` file.  Running it will give us the "NOP" output we expect.
 
+We can also create *new* buffers while inside the addon.  Let's modify the rotate function to increment the input, but return another buffer containing the string resulting from a decrement operation:
+
+```cpp
+NAN_METHOD(rotate) {
+    char* buffer = (char*) node::Buffer::Data(info[0]->ToObject());
+    unsigned int size = info[1]->Uint32Value();
+    unsigned int rot = info[2]->Uint32Value();
+   
+    char * retval = new char[size];
+    for(unsigned int i = 0; i < size; i++ ) {
+        retval[i] = buffer[i] - rot;
+        buffer[i] += rot;
+    }   
+    
+    info.GetReturnValue().Set(Nan::NewBuffer(retval, size).ToLocalChecked());
+}
+```
+
+```js
+var result = addon.rotate(buffer, buffer.length, 13);
+
+console.log(buffer.toString('ascii'));
+console.log(result.toString('ascii'));
+```
+
+Now the resulting buffer will contain '456'.  Note the use of NAN's `NewBuffer` function, which wraps the dynamically allocated `retval` array in a Node buffer.  Doing so *transfers ownership* of this memory to Node.js - the memory associated with `retval` will be reclaimed (by calling `free`) when the buffer goes out of scope in JavaScript.  More on this issue later - as we don't always want to have this happen this way!
+
+You can find additional information about how NAN handles buffers [here](https://github.com/nodejs/nan/blob/master/doc/buffers.md). 
 
 ## Example:  PNG and BMP Image Processing
+The example above is pretty basic - and not particularly compelling.  Let's turn our attention to a more practical example - image processing with C++ code.  If you want to get the full source code for both the example above, and the image processing code below, you can head over to my `nodecpp-demo` repository at [https://github.com/freezer333/nodecpp-demo](https://github.com/freezer333/nodecpp-demo), the code is under the "buffers" directory.
+
 Image processing, in general, is anything that manipulates/transforms an image.  An image of course is a big chunk of binary data - in it's most basic state an integer (or 3 or 4) can be used to represent each pixel in an image, and those integers can be stored in a file or held in a contiguously allocated array.  Typically image data is not held in *raw* data form though, it's compressed/encoded into a image format standard such as png, gif, bmp, jpeg, and others.
 
 Image processing is a good candidate for C++ addons, as image processing can often be time consuming, CPU intensive, and some processing technique have parallelism that C++ can exploit.  For the example we'll look at now, we'll simply convert png formatted data into bmp formatted data[^jspng].  There are a good number of existing, open source C++ libraries that can help us with this task, I'm going to use LodePNG as it is dependency free and quite simple to use.  LodePNG can be found at [http://lodev.org/lodepng/](http://lodev.org/lodepng/), and it's source code is at [https://github.com/lvandeve/lodepng](https://github.com/lvandeve/lodepng).  Many thanks to the developer, Lode Vandevenne for providing such an easy to use library!

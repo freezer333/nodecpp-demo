@@ -6,9 +6,10 @@ const png_file = process.argv[2];
 const bmp_file = path.basename(png_file, '.png') + ".bmp";
 const png_buffer = fs.readFileSync(png_file);
 
-const bmp_buffer = png2bmp.getBMP(png_buffer, png_buffer.length);
-fs.writeFileSync(bmp_file, bmp_buffer);  
-/*
+// Synchronous version
+//const bmp_buffer = png2bmp.getBMP(png_buffer, png_buffer.length);
+//fs.writeFileSync(bmp_file, bmp_buffer);  
+
 png2bmp.getBMPAsync(png_buffer, png_buffer.length, function(err, bmp_buffer) {
     if (err) {
         console.log(err);
@@ -16,4 +17,4 @@ png2bmp.getBMPAsync(png_buffer, png_buffer.length, function(err, bmp_buffer) {
     else {
         fs.writeFileSync(bmp_file, bmp_buffer);
     }
-}); */
+}); 

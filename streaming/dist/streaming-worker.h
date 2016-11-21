@@ -71,7 +71,10 @@ class StreamingWorker : public AsyncProgressWorker {
     {
       input_closed = false;
     }
-  ~StreamingWorker() {}
+  ~StreamingWorker() {
+    delete progress;
+    delete error_callback;
+  }
 
   void HandleErrorCallback() {
     HandleScope scope;

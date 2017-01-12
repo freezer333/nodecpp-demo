@@ -1,9 +1,9 @@
 # Purpose
 `streaming-worker` is designed to give you a simple interface for sending and receiving events/messages from a long running asynchronous C++ Node.js Addon.
 
-**Note** - this library is really only for creating very specific types of Node.js C++ addons, ones that are relatively long running and either need to receive a continuous stream of inputs or will send a stream of outputs to/from your JavaScript code (or both).  The addons operate in seperate worker threads, and use `nan`'s [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) to facilitate stream-like and event-like interfaces.
+**Note** - this library is really only for creating very specific types of Node.js C++ addons, ones that are relatively long running and either need to receive a continuous stream of inputs or will send a stream of outputs to/from your JavaScript code (or both).  The addons operate in separate worker threads, and use `nan`'s [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) to facilitate stream-like and event-like interfaces.
 
-This library is based on a chapter in [Node C++ Integration](http://scottfrees.com/ebooks/nodecpp/) - which covers it's implementation in a lot more detail.
+This library is based on a chapter in [Node C++ Integration](http://scottfrees.com/ebooks/nodecpp/) - which covers its implementation in a lot more detail.
 
 # Usage
 `streaming-worker` is a C++/JS SDK for building streaming addons - it's not an addon itself!.  You create addons by inheriting from the `StreamingWorker` abstract class defined in the SDK.  Your addon, at a minimum, needs to implement a few virtual functions (most importantly, `Execute`), and can utilize standard methods to read and write `Message` objects to and from JavaScript.  `Message` objects are name/value (string) pairs.
@@ -22,7 +22,7 @@ cd nodecpp-demo/streaming
 When you download the code, the `/dist` directory contains all you need to create a new addon.  To build an addon, you need to setup (probably in a seperate directory) a `binding.gyp` file, a `package.json` file, and whatever C++ source files you'll need for your addon.
 
 ### Setup binding.gyp
-Your `binding.gyp` file is the input to the build process, its necessary whenever you are creating C++ addons.  To use the SDK, you need to make sure you (at a minimum) add the necessary information so `node-gyp` can find the `/dist` directory with the SDK's header file and so it can use `NAN`.  In addition, you'll probably want to enable C++11 at least.
+Your `binding.gyp` file is the input to the build process, it's necessary whenever you are creating C++ addons.  To use the SDK, you need to make sure you (at a minimum) add the necessary information so `node-gyp` can find the `/dist` directory with the SDK's header file and so it can use `NAN`.  In addition, you'll probably want to enable C++11 at least.
 
 ```js
 {
@@ -56,7 +56,7 @@ Checkout the examples below for some actual working `binding.gyp` files.
 Your `package.json` works in conjunction with node-gyp, and will ensure `nan` is installed properly.  The key fields you need to put here are:
 1. the ADDON_NAME, which should match the string your put in as `target_name` in `binding.gyp`
 2. `gypfile` should be `true` so `npm install` knows to build the addon
-3. `nan` and `streaming-worker` need to be dependencies.  Remeber, your JavaScript program that uses your addon also uses the JS adapter that comes with this SDK.  You can link it locally, or include it from `npm`.  More on this in Step 3.  
+3. `nan` and `streaming-worker` need to be dependencies.  Remember, your JavaScript program that uses your addon also uses the JS adapter that comes with this SDK.  You can link it locally, or include it from `npm`.  More on this in Step 3.  
 
 ```
 {
@@ -90,7 +90,7 @@ class MyStreamingAddon : public StreamingWorker {
 ```
 
 #### Addon `Execute` method
-Once the addon is created, the base class will queue your addon up as a worker thread, hooked into `lib_uv`'s event loop.  Your addon will be invoked within it's `Execute` function.  **Beware, this function is executed in a worker thread, not the Node.js event loop thread!**.  Synchronization when accessing any state variables (member variables) is your responsibility.  The `Execute` function must accept a `progress` object, which is defined by `nan`'s [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) class.  You won't use it directly, but you'll pass it along to the sending method when you want to send messages to Node.js.
+Once the addon is created, the base class will queue your addon up as a worker thread, hooked into `libuv`'s event loop.  Your addon will be invoked within its `Execute` function.  **Beware, this function is executed in a worker thread, not the Node.js event loop thread!**.  Synchronization when accessing any state variables (member variables) is your responsibility.  The `Execute` function must accept a `progress` object, which is defined by `nan`'s [AsyncProgressWorker](https://github.com/nodejs/nan/blob/master/doc/asyncworker.md) class.  You won't use it directly, but you'll pass it along to the sending method when you want to send messages to Node.js.
 
 ```cpp
 // Member method of MyStreamingAddon
@@ -195,7 +195,7 @@ streaming_addon.from.on('close', function() {
 });
 ```
 
-When you send an event to your addon, the C++ code will read a `Message` object whose name is set to the event name (first parameter of `emit`) and data is set to the actual message (second parameter of `emit`).  Likewise, when sending a `Message` object from C++, it's name will be the name of the event that gets emitted.
+When you send an event to your addon, the C++ code will read a `Message` object whose name is set to the event name (first parameter of `emit`) and data is set to the actual message (second parameter of `emit`).  Likewise, when sending a `Message` object from C++, its name will be the name of the event that gets emitted.
 
 ### Using the Streaming API
 Ok, so that's not exactly "streaming"... the `streaming-worker` adapter also adds two methods for creating actual streams to and from your C++ code too though.  To capture the output of your C++ via a stream, you can use the `stream()` method on the `from` object:
@@ -265,7 +265,7 @@ The example itself emits a few inputs (10, then 5 seconds later, 20) to the addo
 The demo is found in `/streaming/examples/even_odd`.  Do an `npm install` followed by an `npm start` to run it.
 
 ## Sensor Data (simulation)
-This example demonstrates creating a **streaming interface** to capture output from a C++ addon.  It's meant to mimick what you might see from a positional tracker, like something reporting the position of a head mounted display in a VR application.   The C++ addon emits sensor data at a regular interval. The sensor data emitted is an *object*, which is **serialized to JSON** strings using the [JSON](https://github.com/nlohmann/json) library for C++.
+This example demonstrates creating a **streaming interface** to capture output from a C++ addon.  It's meant to mimic what you might see from a positional tracker, like something reporting the position of a head-mounted display in a VR application.   The C++ addon emits sensor data at a regular interval. The sensor data emitted is an *object*, which is **serialized to JSON** strings using the [JSON](https://github.com/nlohmann/json) library for C++.
 
 The JavaScript instantiates the addon, which immediately starts emitting the sensor data.  In the example, to interfaces to capture the output are used.
 
@@ -276,16 +276,16 @@ The demo is found in `/streaming/examples/sensor_sim`.  Do an `npm install` foll
 ## Accumulation in C++ 
 This example demonstrates streaming data *into* your addon.  The addon is a simple accumulator - it receives events, assuming the event data are integers.  The addon sums up all the events it reads from the stream and emits a single "sum" event once the stream has been closed.  
 
-In this example, stream closing is propogated to the addon via a single message whose data is -1.  This is achieved by specifying a custom `end` callback when creating the addon's input stream.  This callback is invoked when the stream is closed.
+In this example, stream closing is propagated to the addon via a single message whose data is -1.  This is achieved by specifying a custom `end` callback when creating the addon's input stream.  This callback is invoked when the stream is closed.
 
-The accumulator C++ addon also allows filtering of messages, allowing it to selectively choose which events it adds to the "sum".  This demonstrates the use of initialization options again, and is helpfulf or the final example (below).
+The accumulator C++ addon also allows filtering of messages, allowing it to selectively choose which events it adds to the "sum".  This demonstrates the use of initialization options again, and is helpful or the final example (below).
 
 The demo is found in `/streaming/examples/accumulation`.  Do an `npm install` followed by an `npm start` to run it.
 
 ## Piping addons
-This example doesn't create any new C++ addons, it just demonstrates how you can pipe together streaming-worker addons.  The example starts out by creating an `even_odd` streaming worker.  Next, two `accumulator` addons are created with filters on them so one captures only even events (`even_event`) and another captures odd events (`odd_event`).  An input stream is created for both the even and odd accumulator, in both cases input stream closing is mapped to sending an event with `-1` as it's data.  The output stream from the `even_odd` addon is piped into **both** accumulator inputs streams.
+This example doesn't create any new C++ addons, it just demonstrates how you can pipe together streaming-worker addons.  The example starts out by creating an `even_odd` streaming worker.  Next, two `accumulator` addons are created with filters on them so one captures only even events (`even_event`) and another captures odd events (`odd_event`).  An input stream is created for both the even and odd accumulator, in both cases input stream closing is mapped to sending an event with `-1` as its data.  The output stream from the `even_odd` addon is piped into **both** accumulator inputs streams.
 
-Finally, the `even_odd` addon is kicked off by emiting `10` to it using its event emitter interface.  The result is that both accumulators receive all the events, but sum up only even or odd respectively.
+Finally, the `even_odd` addon is kicked off by emitting `10` to it using its event emitter interface.  The result is that both accumulators receive all the events, but sum up only even or odd respectively.
 
 The demo is found in `/streaming/examples/piping`.  Do an `npm install` followed by an `npm start` to run it.  **Note:** in order to use this example, you also need to do an `npm install` in the `even_odd` and `accumulator` examples!
 

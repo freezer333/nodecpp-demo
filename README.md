@@ -5,7 +5,7 @@ This repository contains full code listings that help guide you through developi
 The content is fully explained on my blog - [blog.scottfrees.com](http://blog.scottfrees.com) and is the subject of my ebook - [C++ and Node.js Integration](http://scottfrees.com/ebooks/nodecpp).
 
 ## Basics
-Some simple "hello world" type programs, discussed in the first chapter of the [ebook](http://scottfrees.com/ebooks/nodecpp)
+Some simple "hello world" type programs, discussed in the first chapter of the [ebook](http://scottfrees.com/ebooks/nodecpp).
 
 ## Conversions
 Code "cheat sheet" for passing different data types between C++ and JavaScript.  See [here](http://blog.scottfrees.com/type-conversions-from-javascript-to-c-in-v8) for associated blog post.  This is also covered in Chapter 2 of the [ebook](http://scottfrees.com/ebooks/nodecpp).
@@ -29,7 +29,7 @@ The same Polynomial class, but using NAN instead of direct Node.js API.  Covered
 A complete SDK and set of examples for using NAN and asynchronous callbacks to stream data between C++ and JavaScript.  This is the subject of Chapter 7 of the [ebook](http://scottfrees.com/ebooks/nodecpp).
 
 ## Buffers
-An example of using buffers to move data between JavaScript and a simply image processing C++ addon (converting PNG to BMP using [LodePNG](http://lodev.org/lodepng/)).  This is covered in Appendix B of the [ebook](http://scottfrees.com/ebooks/nodecpp).
+An example of using buffers to move data between JavaScript and a simple image processing C++ addon (converting PNG to BMP using [LodePNG](http://lodev.org/lodepng/)).  This is covered in Appendix B of the [ebook](http://scottfrees.com/ebooks/nodecpp).
 
 ## Packaging
 A set of examples for building and distributing reusable addons.  Covered in Chapter 8 of the [ebook](http://scottfrees.com/ebooks/nodecpp).

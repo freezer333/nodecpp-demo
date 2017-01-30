@@ -9,4 +9,7 @@ conversions/loose/build
 conversions/strict/build
 *build*
 *node_modules*
+*.vscode/*
+buffers/basic/.vscode/*
+streaming/.vscode/*
 sample.bmp

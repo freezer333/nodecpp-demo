@@ -13,3 +13,4 @@ conversions/strict/build
 buffers/basic/.vscode/*
 streaming/.vscode/*
 sample.bmp
+.DS_Store

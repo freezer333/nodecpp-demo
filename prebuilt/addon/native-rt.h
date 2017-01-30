@@ -1,0 +1,1 @@
+double native_now();

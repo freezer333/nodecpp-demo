@@ -1,0 +1,25 @@
+{
+  "name": "native_rt",
+  "version": "1.0.1",
+  "description": "Example for using node-pre-gyp for cross-platform binaries",
+  "gypfile": true,
+  "main": "./index.js",
+  "author": "Scott Frees <scott.frees@gmail.com> (http://scottfrees.com/)",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "2.7.27",
+    "nan": "^2.3.3",
+    "node-pre-gyp": "0.6.32"
+  },
+  "binary": {
+    "module_name": "native_rt",
+    "module_path": "./lib/binding/{configuration}/{node_abi}-{platform}-{arch}/",
+    "remote_path": "./{module_name}/v{version}/{configuration}/",
+    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
+    "host": "https://nodeaddons.s3-us-west-2.amazonaws.com"
+  },
+  "scripts": {
+    "preinstall": "npm install node-pre-gyp",
+    "install": "node-pre-gyp install --fallback-to-build"
+  }
+}

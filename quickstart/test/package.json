@@ -1,0 +1,10 @@
+{
+      "name": "my_addon_test",
+      "version": "0.0.0",
+      "description": "Tests an addon",
+      "main": "./index.js",
+      "license": "MIT",
+      "dependencies": {
+        "my_addon": "file:../addon" 
+      }
+}

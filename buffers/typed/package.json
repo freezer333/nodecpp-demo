@@ -1,0 +1,12 @@
+{
+  "name": "typed_example",
+  "version": "0.0.1",
+  "private": true,
+  "gypfile": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+  	"nan": "*"
+  }
+}

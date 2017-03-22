@@ -50,4 +50,14 @@ assert(squares[1] == 4);
 assert(squares[2] == 9);
 assert(squares.sum_of_squares == 14);
 
+var obj = {
+    a: 5,
+    b : [1, 2, 3]
+}
+
+addon.add_array(obj);
+assert(obj.b[0] == 6);
+assert(obj.b[1] == 7);
+assert(obj.b[2] == 8);
+
 console.log("Hooray!  The addon worked as expected.");

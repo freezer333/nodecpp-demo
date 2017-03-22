@@ -104,6 +104,27 @@ NAN_METHOD(IncrementArray) {
     info.GetReturnValue().Set(squares);
 }
 
+NAN_METHOD(AddArray) {
+    if ( info.Length() > 0 ) {
+        Local<Object> input = info[0]->ToObject();
+        Local<String> a_prop = Nan::New<String>("a").ToLocalChecked();
+        Local<String> b_prop = Nan::New<String>("b").ToLocalChecked();
+        
+        double a = Nan::Get(input, a_prop).ToLocalChecked()->NumberValue();
+        Local<Array> b = Local<Array>::Cast(Nan::Get(input, b_prop).ToLocalChecked());
+        
+        for (unsigned int i = 0; i < b->Length(); i++ ) {
+            if (Nan::Has(b, i).FromJust()) {
+                // get data from a particular index
+                double value = Nan::Get(b, i).ToLocalChecked()->NumberValue();
+                
+                // set a particular index - note the array parameter
+                // is mutable
+                Nan::Set(b, i, Nan::New<Number>(value + a));
+            }
+        }
+    }
+}
 
 NAN_MODULE_INIT(Init) {
    Nan::Set(target, New<String>("pass_number").ToLocalChecked(),
@@ -120,6 +141,9 @@ NAN_MODULE_INIT(Init) {
         
    Nan::Set(target, New<String>("pass_array").ToLocalChecked(),
         GetFunction(New<FunctionTemplate>(IncrementArray)).ToLocalChecked());
+   
+    Nan::Set(target, New<String>("add_array").ToLocalChecked(),
+        GetFunction(New<FunctionTemplate>(AddArray)).ToLocalChecked());
 }
 
 NODE_MODULE(my_addon, Init)

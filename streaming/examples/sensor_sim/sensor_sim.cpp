@@ -28,8 +28,8 @@ class Sensor : public StreamingWorker {
         json sample;
         sample["sensor"] = name;
         sample["position"]["x"] = x;
-        sample["position"]["y"] = x;
-        sample["position"]["z"] = x;
+        sample["position"]["y"] = y;
+        sample["position"]["z"] = z;
         Message tosend("position_sample", sample.dump());
         writeToNode(progress, tosend);
     }

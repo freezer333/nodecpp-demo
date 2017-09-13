@@ -109,7 +109,7 @@ void WrappedPoly::GetCoeff(Local<String> property, const PropertyCallbackInfo<Va
     WrappedPoly *obj = ObjectWrap::Unwrap<WrappedPoly>(info.This());
 
     v8::String::Utf8Value s(property);
-    std::string str(*s);
+    std::string str(*s, s.length());
 
     if (str == "a")
     {
@@ -130,7 +130,7 @@ void WrappedPoly::SetCoeff(Local<String> property, Local<Value> value, const Pro
     WrappedPoly *obj = ObjectWrap::Unwrap<WrappedPoly>(info.This());
 
     v8::String::Utf8Value s(property);
-    std::string str(*s);
+    std::string str(*s, s.length());
 
     if (str == "a")
     {

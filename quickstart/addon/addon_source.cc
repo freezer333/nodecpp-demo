@@ -45,7 +45,7 @@ NAN_METHOD(PassString) {
     }
     v8::String::Utf8Value val(info[0]->ToString());
     
-    std::string str (*val);
+    std::string str (*val, val.length());
     std::reverse(str.begin(), str.end());
     
     info.GetReturnValue().Set(Nan::New<String>(str.c_str()).ToLocalChecked()); 

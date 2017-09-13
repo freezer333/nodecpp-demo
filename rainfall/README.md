@@ -206,7 +206,7 @@ sample unpack_sample(Isolate * isolate, const Handle<Object> sample_obj) {
               sample_obj->Get(String::NewFromUtf8(isolate, "rainfall"));
 
   v8::String::Utf8Value utfValue(date_Value);
-  s.date = std::string(*utfValue);
+  s.date = std::string(*utfValue, utfValue.length());
  
   // Unpack the numeric rainfall amount directly from V8 value
   s.rainfall = rainfall_Value->NumberValue();

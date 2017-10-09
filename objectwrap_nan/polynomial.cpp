@@ -69,7 +69,7 @@ NAN_GETTER(WrappedPoly::GetCoeff) {
     v8::Isolate* isolate = info.GetIsolate();
     WrappedPoly* obj = ObjectWrap::Unwrap<WrappedPoly>(info.This());
     v8::String::Utf8Value s(property);
-    std::string str(*s);
+    std::string str(*s, s.length());
     if ( str == "a")     info.GetReturnValue().Set(v8::Number::New(isolate, obj->a_));
     else if (str == "b") info.GetReturnValue().Set(v8::Number::New(isolate, obj->b_));
     else if (str == "c") info.GetReturnValue().Set(v8::Number::New(isolate, obj->c_));
@@ -79,7 +79,7 @@ NAN_SETTER(WrappedPoly::SetCoeff) {
     WrappedPoly* obj = ObjectWrap::Unwrap<WrappedPoly>(info.This());
     
     v8::String::Utf8Value s(property);
-    std::string str(*s);
+    std::string str(*s, s.length());
     
     if ( str == "a") obj->a_ = value->NumberValue();
     else if (str == "b") obj->b_ = value->NumberValue();

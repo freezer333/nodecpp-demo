@@ -1,4 +1,4 @@
-# nodecpp-demo
+# nodecpp-demo code
 
 This repository contains full code listings that help guide you through developing Node.js addons.
 

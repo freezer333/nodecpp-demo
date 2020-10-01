@@ -20,7 +20,7 @@ Contains a full example of using objects, arrays, and asynchronous callbacks to 
 A set of example addon functions demonstrating NAN's AsyncWorker and AsyncProgressWorker.  Covered in Chapter 6 of the [ebook](http://scottfrees.com/ebooks/nodecpp).
 
 ## ObjectWrap
-An `ObjectWrap` example developing a C++ polynomial class.  Covered in Chapter 5 of the [ebook](http://scottfrees.com/ebooks/nodecpp).
+An `ObjectWrap` is used to bind the lifetime of C++ code to a JavaScript object developing a C++ polynomial class.  Covered in Chapter 5 of the [ebook](http://scottfrees.com/ebooks/nodecpp).
 
 ## ObjectWrap_NAN
 The same Polynomial class, but using NAN instead of direct Node.js API.  Covered in Chapter 6 of the [ebook](http://scottfrees.com/ebooks/nodecpp).

@@ -5,7 +5,7 @@ using namespace v8;
 
 void Method(const FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = args.GetIsolate();
-  Local<String>  retval = String::NewFromUtf8(isolate, "world");
+  Local<String>  retval = String::NewFromUtf8(isolate, "to the world of programming");
   args.GetReturnValue().Set(retval);
 }
 
